@@ -2,12 +2,13 @@ import moo from "moo";
 
 let lexer = moo.compile({
   WS: /[ \t]+/,
-  comment: /\/\/.*?$/,
-  number: /0|[1-9][0-9]*/,
-  string: /"(?:\\["\\]|[^\n"\\])*"/,
+  comma: ",",
+  period: ".",
+  number: { match: /0|[1-9][0-9]*/, value: s => Number(s) },
+  string: /[\p{Alphabetic}-]+/u,
   lparen: "(",
   rparen: ")",
-  keyword: ["while", "if", "else", "moo", "cows"],
+  qmark: "?",
   NL: { match: /\n/, lineBreaks: true }
 });
 

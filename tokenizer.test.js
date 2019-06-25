@@ -2,20 +2,45 @@ import moo from "moo";
 import lexer from "./tokenizer";
 
 describe("Basic Lexing", () => {
+    it("detects commas", () => {
+        lexer.reset(",");
+        expect(lexer.next()).toHaveProperty("type", "comma");
+    });
+    it("detects periods", () => {
+        lexer.reset(".");
+        expect(lexer.next()).toHaveProperty("type", "period");
+    });
+    it("detects question marks", () => {
+        lexer.reset("?");
+        expect(lexer.next()).toHaveProperty("type", "qmark");
+    });
+    it("handles unicode", () => {
+        lexer.reset("Dàvid");
+        expect(lexer.next()).toHaveProperty("type", "string");
+    });
     it("lexes correctly", () => {
-        lexer.reset("while (10");
-        const val1 = lexer.next();
-        expect(val1).toHaveProperty("type", "keyword");
-        expect(val1).toHaveProperty("value", "while");
-        const val2 = lexer.next();
-        expect(val2).toHaveProperty("type", "WS");
-        expect(val2).toHaveProperty("value", " ");
-        const val3 = lexer.next();
-        expect(val3).toHaveProperty("type", "lparen");
-        const val4 = lexer.next();
-        expect(val4).toHaveProperty("type", "number");
-        expect(val4).toHaveProperty("value", "10");
-        const val5 = lexer.next();
-        expect(val5).toBeUndefined();
+        lexer.reset("David Newbury, 1990?.");
+        let val = "";
+        val = lexer.next();
+        expect(val).toHaveProperty("type", "string");
+        expect(val).toHaveProperty("value", "David");
+        val = lexer.next();
+        expect(val).toHaveProperty("type", "WS");
+        val = lexer.next();
+        expect(val).toHaveProperty("type", "string");
+        expect(val).toHaveProperty("value", "Newbury");
+        val = lexer.next();
+        expect(val).toHaveProperty("type", "comma");
+        val = lexer.next();
+        expect(val).toHaveProperty("type", "WS");
+        val = lexer.next();
+        expect(val).toHaveProperty("type", "number");
+        expect(val).toHaveProperty("value", 1990);
+        val = lexer.next();
+        expect(val).toHaveProperty("type", "qmark");
+        val = lexer.next();
+        expect(val).toHaveProperty("type", "period");
+        val = lexer.next();
+        expect(val).toBeUndefined();
     });
 });
