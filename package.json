@@ -6,15 +6,24 @@
   "scripts": {
     "test": "jest",
     "watch": "jest --watch",
-    "lint": "eslint --fix --ext .js, .vue src/vue"
+    "lint": "eslint --fix --ext .js, .vue src/vue",
+    "grammar": "onchange -i 'grammar.ne' -- nearleyc grammar.ne -o grammar.js"
   },
   "author": "David Newbury",
   "license": "MIT",
   "devDependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.5",
+    "@babel/preset-env": "^7.4.5",
+    "babel-jest": "^24.8.0",
     "eslint": "^6.0.1",
     "eslint-config-prettier": "^5.1.0",
     "eslint-plugin-prettier": "^3.1.0",
     "jest": "^24.8.0",
+    "onchange": "^6.0.0",
     "prettier": "1.18.2"
+  },
+  "dependencies": {
+    "nearley": "^2.16.0"
   }
 }
