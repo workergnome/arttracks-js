@@ -1,2 +1,1 @@
-main -> (statement "\n"):+
-statement -> "foo" | "bar"
+@include "./parsers/date_parser.ne"

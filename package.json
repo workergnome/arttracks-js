@@ -7,7 +7,8 @@
     "test": "jest",
     "watch": "jest --watch",
     "lint": "eslint --fix --ext .js, .vue src/vue",
-    "grammar": "onchange -i 'grammar.ne' -- nearleyc grammar.ne -o grammar.js"
+    "grammar": "onchange -i 'parsers/*.ne' -- nearleyc parsers/date_parser.ne -o parsers/date_parser.js",
+    "railroad": "nearley-railroad parsers/date_parser.ne -o railroad.html"
   },
   "author": "David Newbury",
   "license": "MIT",
