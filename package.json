@@ -1,17 +1,18 @@
 {
-  "name": "arttracks_js",
+  "name": "arttracks-js",
   "version": "0.1.0",
-  "description": "A JS library for parsing art provenance",
+  "description": "A JS library for parsing art provenance and dates",
+  "repository": "github:workergnome/arttracks-js",
+  "author": "David Newbury",
+  "license": "MIT",
   "main": "index.js",
   "scripts": {
     "test": "jest",
     "watch": "jest --watch",
     "lint": "eslint --fix --ext .js, .vue src/vue",
     "grammar": "onchange -i 'grammars/*.ne' -- ./bin/update_nearley.sh",
-    "railroad": "nearley-railroad grammars/date_parser.ne -o railroad.html"
+    "railroad": "nearley-railroad grammars/date_string_parser.ne -o railroad.html"
   },
-  "author": "David Newbury",
-  "license": "MIT",
   "devDependencies": {
     "@babel/cli": "^7.4.4",
     "@babel/core": "^7.4.5",
