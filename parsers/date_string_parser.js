@@ -136,6 +136,67 @@ function constructIsoDate(d) {
     all: d
   }
 }
+
+
+function edtf(d) {
+  let day = String(d.day).padStart(2,"0");
+  let month = String(d.month).padStart(2,"0");
+  let year = String(d.year).padStart(4,"0");
+  let decade = String(d.decade).replace(/0$/, "X").padStart(4,"0")
+  let century = String(d.century).replace(/00$/, "XX").padStart(4,"0")
+  let era = d.era == "CE" ? "" : "-"
+  let certainty = d.certainty ? "" : "?"
+
+  if(d.day) {
+    return `${era}${year}-${month}-${day}${certainty}`;
+  }
+  else if  (d.month) {
+    return `${era}${year}-${month}-XX${certainty}`;
+  }
+  else if  (d.year) {
+    return `${era}${year}-XX-XX${certainty}`;
+  }
+  else if  (d.decade) {
+    return `${era}${decade}-XX-XX${certainty}`;
+  }
+  else if  (d.century) {
+    return `${era}${century}-XX-XX${certainty}`;
+  }
+}
+
+
+function formatOnDate(d) {
+  return {
+    botb: edtf(d[2]),
+    eotb: edtf(d[2]),
+    bote: edtf(d[2]),
+    eote: edtf(d[2])
+  };
+}
+
+function formatDatePhrase(d) {
+  let merged_dates = {}
+  for (let part of d[0][0]) {
+    Object.assign(merged_dates,part)
+  }
+  return merged_dates;
+}
+
+function processStartDate(d) {
+  if(d[0].day) {
+    return {
+      botb: edtf(d[0]), 
+      eotb: edtf(d[0]),
+      bote: edtf(d[0]), 
+      eote: edtf(d[0])
+    }
+  } 
+  return {
+    botb: edtf(d[0]),
+    eotb: edtf(d[0])
+  }
+}
+
 var grammar = {
     Lexer: undefined,
     ParserRules: [
@@ -302,9 +363,94 @@ var grammar = {
     {"name": "month_names$subexpression$12", "symbols": [/[nN]/, /[oO]/, /[vV]/, /[eE]/, /[mM]/, /[bB]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "month_names", "symbols": ["month_names$subexpression$12"], "postprocess": id},
     {"name": "month_names$subexpression$13", "symbols": [/[dD]/, /[eE]/, /[cC]/, /[eE]/, /[mM]/, /[bB]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_names", "symbols": ["month_names$subexpression$13"], "postprocess": id}
+    {"name": "month_names", "symbols": ["month_names$subexpression$13"], "postprocess": id},
+    {"name": "date_string", "symbols": ["date_phrase"], "postprocess": id},
+    {"name": "date_string", "symbols": ["on_date"], "postprocess": id},
+    {"name": "date_string", "symbols": ["no_date"], "postprocess": id},
+    {"name": "date_phrase$subexpression$1", "symbols": ["start_clause"]},
+    {"name": "date_phrase$subexpression$1", "symbols": ["end_clause"]},
+    {"name": "date_phrase$subexpression$1$subexpression$1", "symbols": ["start_clause", "end_clause"], "postprocess": (d) => [d[0][0],d[1][0]]},
+    {"name": "date_phrase$subexpression$1", "symbols": ["date_phrase$subexpression$1$subexpression$1"]},
+    {"name": "date_phrase", "symbols": ["date_phrase$subexpression$1"], "postprocess": formatDatePhrase},
+    {"name": "on_date$string$1", "symbols": [{"literal":"o"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "on_date", "symbols": ["on_date$string$1", "__", "precise_date"], "postprocess": formatOnDate},
+    {"name": "no_date$subexpression$1$string$1", "symbols": [{"literal":"n"}, {"literal":"o"}, {"literal":" "}, {"literal":"d"}, {"literal":"a"}, {"literal":"t"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "no_date$subexpression$1", "symbols": ["no_date$subexpression$1$string$1"]},
+    {"name": "no_date$subexpression$1", "symbols": []},
+    {"name": "no_date", "symbols": ["no_date$subexpression$1"], "postprocess": (d) => null},
+    {"name": "start_clause", "symbols": ["in_date"]},
+    {"name": "start_clause", "symbols": ["between_begin"]},
+    {"name": "start_clause", "symbols": ["by_date"]},
+    {"name": "start_clause", "symbols": ["after_date"]},
+    {"name": "start_clause", "symbols": ["just_a_start_date"]},
+    {"name": "end_clause$subexpression$1", "symbols": ["between_end"]},
+    {"name": "end_clause$subexpression$1", "symbols": ["at_least_date"]},
+    {"name": "end_clause$subexpression$1", "symbols": ["before_date"]},
+    {"name": "end_clause$subexpression$1", "symbols": ["just_an_end_date"]},
+    {"name": "end_clause", "symbols": ["until", "end_clause$subexpression$1"], "postprocess": (d) => d[1]},
+    {"name": "just_a_start_date", "symbols": ["date"], "postprocess": processStartDate},
+    {"name": "just_an_end_date", "symbols": ["date"], "postprocess": (d) => ({bote: edtf(d[0]), eote: edtf(d[0])})},
+    {"name": "in_date", "symbols": ["throughout", "date"], "postprocess": (d) => ({eotb: edtf(d[1]), bote: edtf(d[1])})},
+    {"name": "by_date", "symbols": ["by", "date"], "postprocess": (d) => ({eotb: edtf(d[1])})},
+    {"name": "after_date$ebnf$1", "symbols": ["sometime"], "postprocess": id},
+    {"name": "after_date$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "after_date", "symbols": ["after_date$ebnf$1", "after", "date"], "postprocess": (d) => ({botb: edtf(d[2])})},
+    {"name": "between_begin", "symbols": ["between", "date", "and", "date"], "postprocess": (d) => ({botb: edtf(d[1]),eotb: edtf(d[3])})},
+    {"name": "between_end", "symbols": ["between", "date", "and", "date"], "postprocess": (d) => ({bote: edtf(d[1]),eote: edtf(d[3])})},
+    {"name": "before_date", "symbols": ["before_phrase", "date"], "postprocess": (d) => ({eote: edtf(d[1])})},
+    {"name": "at_least_date", "symbols": ["at_least", "date"], "postprocess": (d) => ({bote: edtf(d[1])})},
+    {"name": "throughout$subexpression$1$subexpression$1$subexpression$1", "symbols": [{"literal":"T"}]},
+    {"name": "throughout$subexpression$1$subexpression$1$subexpression$1", "symbols": [{"literal":"t"}]},
+    {"name": "throughout$subexpression$1$subexpression$1$string$1", "symbols": [{"literal":"h"}, {"literal":"r"}, {"literal":"o"}, {"literal":"u"}, {"literal":"g"}, {"literal":"h"}, {"literal":"o"}, {"literal":"u"}, {"literal":"t"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "throughout$subexpression$1$subexpression$1", "symbols": ["throughout$subexpression$1$subexpression$1$subexpression$1", "throughout$subexpression$1$subexpression$1$string$1"]},
+    {"name": "throughout$subexpression$1", "symbols": ["throughout$subexpression$1$subexpression$1"]},
+    {"name": "throughout$subexpression$1$string$1", "symbols": [{"literal":"i"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "throughout$subexpression$1", "symbols": ["throughout$subexpression$1$string$1"]},
+    {"name": "throughout$subexpression$1$string$2", "symbols": [{"literal":"I"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "throughout$subexpression$1", "symbols": ["throughout$subexpression$1$string$2"]},
+    {"name": "throughout", "symbols": ["throughout$subexpression$1", "__"], "postprocess": null},
+    {"name": "after$subexpression$1", "symbols": [{"literal":"A"}]},
+    {"name": "after$subexpression$1", "symbols": [{"literal":"a"}]},
+    {"name": "after$string$1", "symbols": [{"literal":"f"}, {"literal":"t"}, {"literal":"e"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "after", "symbols": ["after$subexpression$1", "after$string$1", "__"], "postprocess": null},
+    {"name": "sometime$subexpression$1", "symbols": [{"literal":"s"}]},
+    {"name": "sometime$subexpression$1", "symbols": [{"literal":"S"}]},
+    {"name": "sometime$string$1", "symbols": [{"literal":"o"}, {"literal":"m"}, {"literal":"e"}, {"literal":"t"}, {"literal":"i"}, {"literal":"m"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "sometime", "symbols": ["sometime$subexpression$1", "sometime$string$1", "__"], "postprocess": null},
+    {"name": "between$ebnf$1", "symbols": ["sometime"], "postprocess": id},
+    {"name": "between$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "between$subexpression$1", "symbols": [{"literal":"B"}]},
+    {"name": "between$subexpression$1", "symbols": [{"literal":"b"}]},
+    {"name": "between$string$1", "symbols": [{"literal":"e"}, {"literal":"t"}, {"literal":"w"}, {"literal":"e"}, {"literal":"e"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "between", "symbols": ["between$ebnf$1", "between$subexpression$1", "between$string$1", "__"], "postprocess": null},
+    {"name": "by$subexpression$1$string$1", "symbols": [{"literal":"b"}, {"literal":"y"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "by$subexpression$1", "symbols": ["by$subexpression$1$string$1"]},
+    {"name": "by$subexpression$1$string$2", "symbols": [{"literal":"B"}, {"literal":"y"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "by$subexpression$1", "symbols": ["by$subexpression$1$string$2"]},
+    {"name": "by", "symbols": ["by$subexpression$1", "__"], "postprocess": null},
+    {"name": "and$subexpression$1$string$1", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "and$subexpression$1", "symbols": ["and$subexpression$1$string$1"]},
+    {"name": "and$subexpression$1", "symbols": [{"literal":"&"}]},
+    {"name": "and", "symbols": ["__", "and$subexpression$1", "__"], "postprocess": null},
+    {"name": "until$subexpression$1", "symbols": [{"literal":"U"}]},
+    {"name": "until$subexpression$1", "symbols": [{"literal":"u"}]},
+    {"name": "until$string$1", "symbols": [{"literal":"n"}, {"literal":"t"}, {"literal":"i"}, {"literal":"l"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "until", "symbols": ["_", "until$subexpression$1", "until$string$1", "__"], "postprocess": null},
+    {"name": "no_later_than$subexpression$1$string$1", "symbols": [{"literal":"n"}, {"literal":"o"}, {"literal":" "}, {"literal":"l"}, {"literal":"a"}, {"literal":"t"}, {"literal":"e"}, {"literal":"r"}, {"literal":" "}, {"literal":"t"}, {"literal":"h"}, {"literal":"a"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "no_later_than$subexpression$1", "symbols": ["no_later_than$subexpression$1$string$1"]},
+    {"name": "no_later_than", "symbols": ["no_later_than$subexpression$1", "__"], "postprocess": null},
+    {"name": "before$subexpression$1$string$1", "symbols": [{"literal":"b"}, {"literal":"e"}, {"literal":"f"}, {"literal":"o"}, {"literal":"r"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "before$subexpression$1", "symbols": ["before$subexpression$1$string$1"]},
+    {"name": "before", "symbols": ["before$subexpression$1", "__"], "postprocess": null},
+    {"name": "before_phrase$ebnf$1", "symbols": ["sometime"], "postprocess": id},
+    {"name": "before_phrase$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "before_phrase$subexpression$1", "symbols": ["no_later_than"]},
+    {"name": "before_phrase$subexpression$1", "symbols": ["before"]},
+    {"name": "before_phrase", "symbols": ["before_phrase$ebnf$1", "before_phrase$subexpression$1"], "postprocess": null},
+    {"name": "at_least$string$1", "symbols": [{"literal":"a"}, {"literal":"t"}, {"literal":" "}, {"literal":"l"}, {"literal":"e"}, {"literal":"a"}, {"literal":"s"}, {"literal":"t"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "at_least", "symbols": ["at_least$string$1", "__"], "postprocess": null}
 ]
-  , ParserStart: "date"
+  , ParserStart: "date_string"
 }
 if (typeof module !== 'undefined'&& typeof module.exports !== 'undefined') {
    module.exports = grammar;

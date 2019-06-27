@@ -159,10 +159,11 @@ century   -> "the ":? century_number __ century_word  era:? certainty:?        {
 decade    -> "the ":? decade_number era:? certainty:?                          {% constructDecade %}
 year      -> year_number era:? certainty:?                                     {% constructYear %}
 month     -> month_name comma:? __ year_number era:? certainty:?               {% constructMonth %}
-day       -> month_name __ day_number comma:? __ year_number era:? certainty:? {% constructDay %}
-euroday   -> day_number __ month_name __ year_number era:? certainty:?         {% constructEuroDate %}
+day       -> month_name __ day_with_ordinal comma:? __ year_number era:? certainty:? {% constructDay %}
+euroday   -> day_with_ordinal __ month_name __ year_number era:? certainty:?         {% constructEuroDate %}
 slashdate -> month_number "/" day_number "/" year_number era:? certainty:?     {% constructSlashDate %}
 isodate   -> "-":? year_number "-" month_number "-" day_number certainty:?     {% constructIsoDate %}
+
 
 # Date parts
 # ------------------
@@ -171,7 +172,8 @@ decade_number  -> int "0s"                          {% (d) => (d[0].v + "0") %}
 year_number    -> int                               {% (d) => Number(d[0].v) %}
 month_name     -> month_names | (month_abbrev ".":? {% id %})
 month_number   -> ([0-9] | "1" [0-2] | "0" [1-9])   {% (d) => Number(d[0].join("")) %} 
-day_number     -> [0-3]:? [0-9] ordinal_suffix:?    {% (d) => Number([d[0],d[1]].join("")) %}
+day_number     -> [0-3]:? [0-9]                     {% (d) => Number(d.join("")) %}
+day_with_ordinal -> day_number ordinal_suffix:?     {% id %}
 century_word   -> "Century" | "century"             {% (d) => null %}
 ordinal_suffix -> "th" | "st" | "nd" | "rd"         {% (d) => null %}
 era            -> _ era_names                       {% d => d[1] %}

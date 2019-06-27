@@ -259,7 +259,11 @@ describe("Date Parsing", () => {
     it("does not work with invalid months that start with 1", () => {
       expect(() => parser.feed("13/17/1980")).toThrow();
     });
+    it("does not work with ordinal days", () => {
+      expect(() => parser.feed("10/5th/17")).toThrow();
+    });
   });
+
   describe("ISO Dates", () => {
     it("works with ISO dates", () => {
       parser.feed("1980-10-17");
