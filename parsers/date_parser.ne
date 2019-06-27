@@ -142,15 +142,16 @@ function constructIsoDate(d) {
 
 # Base rule
 # ------------------
-date ->   century   {% id %}
-        | decade    {% id %}
-        | day       {% id %}
-        | year      {% id %}
-        | month     {% id %}
-        | euroday   {% id %}
-        | slashdate {% id %}
-    | isodate   {% id %}
-       
+date ->   century      {% id %}
+        | decade       {% id %}
+        | year         {% id %}
+        | month        {% id %}
+        | precise_date {% id %}
+
+precise_date -> day    {% id %}
+        | euroday      {% id %}
+        | slashdate    {% id %}
+        | isodate      {% id %}
     
 # Core date rules
 # ------------------   
