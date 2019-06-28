@@ -7,7 +7,9 @@ function parse_date(string) {
     nearley.Grammar.fromCompiled(date_string_grammar)
   );
   parser.feed(string);
-  return parser.results[0];
+  let results = parser.results[0];
+  results.debug_string = "v.0.1.1";
+  return results;
 }
 
 export { parse_date };

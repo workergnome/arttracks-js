@@ -1,5 +1,5 @@
 {
-  "name": "arttracks-js",
+  "name": "art-tracks",
   "version": "0.1.0",
   "description": "A JS library for parsing art provenance and dates",
   "repository": "github:workergnome/arttracks-js",
