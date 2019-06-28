@@ -6,9 +6,23 @@ function parse_date(string) {
   const parser = new nearley.Parser(
     nearley.Grammar.fromCompiled(date_string_grammar)
   );
-  parser.feed(string);
-  let results = parser.results[0];
-  results.debug_string = "v.0.1.1";
+  let results = null;
+  try {
+    parser.feed(string);
+    results = parser.results[0];
+  } catch (e) {
+    results = {
+      error: {
+        name: e.name,
+        message: e.message,
+        offset: e.offset,
+        token: e.token
+      }
+    };
+  }
+  if (results) {
+    results.debug_string = "v.0.1.1";
+  }
   return results;
 }
 
