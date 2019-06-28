@@ -1,9 +1,9 @@
 import nearley from "nearley";
 import date_string_grammar from "./grammars/date_string_parser.js";
-import DateHelpers from "./date_helpers.js";
+import DateHelpers from "./DateHelpers.js";
 
 // Create a Parser object from our grammar.
-function parse_date(string) {
+function parse_date(string, opts = {}) {
   const parser = new nearley.Parser(
     nearley.Grammar.fromCompiled(date_string_grammar)
   );
@@ -14,8 +14,16 @@ function parse_date(string) {
     if (base_results) {
       results = {
         edtf: base_results,
-        iso8061: DateHelpers.createIsoDates(base_results)
+        iso8061: DateHelpers.createIsoDates(base_results),
+        utc: DateHelpers.createUTCDates(base_results)
       };
+      if (opts.url) {
+        results.linked_art = DateHelpers.createLinkedArt(
+          base_results,
+          opts.url,
+          opts.label
+        );
+      }
     }
   } catch (e) {
     results = {
