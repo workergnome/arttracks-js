@@ -27,6 +27,7 @@
     "prettier": "1.18.2"
   },
   "dependencies": {
+    "edtf": "^2.6.1",
     "nearley": "^2.16.0"
   }
 }

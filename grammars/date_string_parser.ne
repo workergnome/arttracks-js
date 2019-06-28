@@ -83,9 +83,9 @@ no_date -> ("no date" | null) {% (d) => null %}
 # Phrase Clauses
 # ------------------  
 
-start_clause -> in_date | between_begin | by_date | after_date | just_a_start_date
+start_clause -> in_date | between_begin | by_date | after_date | before_date | just_a_start_date
 end_clause   -> until 
-                (between_end | at_least_date | before_date | just_an_end_date ) 
+                (between_end | at_least_date | u_before_date | just_an_end_date ) 
                 {% (d) => d[1]%}
 
 # Phrase Parts
@@ -97,7 +97,8 @@ by_date       -> by date               {% (d) => ({eotb: edtf(d[1])}) %}
 after_date    -> sometime:? after date {% (d) => ({botb: edtf(d[2])}) %}
 between_begin -> between date and date {% (d) => ({botb: edtf(d[1]),eotb: edtf(d[3])}) %}
 between_end   -> between date and date {% (d) => ({bote: edtf(d[1]),eote: edtf(d[3])}) %}
-before_date   -> before_phrase date    {% (d) => ({eote: edtf(d[1])}) %}
+u_before_date -> before_phrase date    {% (d) => ({eote: edtf(d[1])}) %}
+before_date   -> before_phrase date    {% (d) => ({eotb: edtf(d[1])}) %}
 at_least_date -> at_least date         {% (d) => ({bote: edtf(d[1])}) %}
 
 # Magic Words

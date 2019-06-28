@@ -1,5 +1,6 @@
 import nearley from "nearley";
 import date_string_grammar from "./grammars/date_string_parser.js";
+import DateHelpers from "./date_helpers.js";
 
 // Create a Parser object from our grammar.
 function parse_date(string) {
@@ -9,7 +10,13 @@ function parse_date(string) {
   let results = null;
   try {
     parser.feed(string);
-    results = parser.results[0];
+    const base_results = parser.results[0];
+    if (base_results) {
+      results = {
+        edtf: base_results,
+        iso8061: DateHelpers.createIsoDates(base_results)
+      };
+    }
   } catch (e) {
     results = {
       error: {
@@ -21,7 +28,8 @@ function parse_date(string) {
     };
   }
   if (results) {
-    results.debug_string = "v.0.1.1";
+    results.meta = {};
+    results.meta.version = "v.0.1.2";
   }
   return results;
 }

@@ -246,7 +246,32 @@ describe("Date Parsing", () => {
         expect(results.eote).toBe("2019-07-01");
       });
     });
-    describe("Before dates", () => {
+    describe(" Before dates", () => {
+      it("works with 'before'", () => {
+        parser.feed("before July 1, 2019");
+        const results = parser.results[0];
+        expect(results.bote).toBeUndefined();
+        expect(results.botb).toBeUndefined();
+        expect(results.eotb).toBe("2019-07-01");
+        expect(results.eote).toBeUndefined();
+      });
+      it("works with 'no later than'", () => {
+        parser.feed("no later than July 1, 2019");
+        const results = parser.results[0];
+        expect(results.eotb).toBe("2019-07-01");
+      });
+      it("works with 'sometime no later than'", () => {
+        parser.feed("sometime no later than July 1, 2019");
+        const results = parser.results[0];
+        expect(results.eotb).toBe("2019-07-01");
+      });
+      it("works with 'sometime before'", () => {
+        parser.feed("sometime before July 1, 2019");
+        const results = parser.results[0];
+        expect(results.eotb).toBe("2019-07-01");
+      });
+    });
+    describe("Until Before dates", () => {
       it("works with 'before'", () => {
         parser.feed("until before July 1, 2019");
         const results = parser.results[0];
