@@ -16,27 +16,42 @@ describe("Date Parsing", () => {
     it("handles month precision", () => {
       parser.feed("July 2019");
       const results = parser.results[0];
-      expect(results.botb).toBe("2019-07-XX");
+      expect(results.botb).toBe("2019-07");
     });
     it("handles month precision", () => {
       parser.feed("July 2019");
       const results = parser.results[0];
-      expect(results.botb).toBe("2019-07-XX");
+      expect(results.botb).toBe("2019-07");
     });
     it("handles year precision", () => {
       parser.feed("2019");
       const results = parser.results[0];
-      expect(results.botb).toBe("2019-XX-XX");
+      expect(results.botb).toBe("2019");
     });
     it("handles decade precision", () => {
       parser.feed("the 2010s");
       const results = parser.results[0];
-      expect(results.botb).toBe("201X-XX-XX");
+      expect(results.botb).toBe("201");
+    });
+    it("handles decade precision w/2 digit decades", () => {
+      parser.feed("the 200s");
+      const results = parser.results[0];
+      expect(results.botb).toBe("020");
+    });
+    it("handles decade precision  w/1 digit decades", () => {
+      parser.feed("the 10s");
+      const results = parser.results[0];
+      expect(results.botb).toBe("001");
     });
     it("handles century precision", () => {
       parser.feed("the 21st century");
       const results = parser.results[0];
-      expect(results.botb).toBe("20XX-XX-XX");
+      expect(results.botb).toBe("20");
+    });
+    it("handles century precision with single digit centuries", () => {
+      parser.feed("the 7st century");
+      const results = parser.results[0];
+      expect(results.botb).toBe("06");
     });
     it("handles uncertainty", () => {
       parser.feed("July 1, 2019?");
@@ -46,7 +61,7 @@ describe("Date Parsing", () => {
     it("handles BCE", () => {
       parser.feed("2000 BCE");
       const results = parser.results[0];
-      expect(results.botb).toBe("-2000-XX-XX");
+      expect(results.botb).toBe("-2000");
     });
   });
 
@@ -55,8 +70,8 @@ describe("Date Parsing", () => {
       it("works with a bare year", () => {
         parser.feed("2019");
         const results = parser.results[0];
-        expect(results.botb).toBe("2019-XX-XX");
-        expect(results.eotb).toBe("2019-XX-XX");
+        expect(results.botb).toBe("2019");
+        expect(results.eotb).toBe("2019");
       });
       it("works with a bare complete date", () => {
         parser.feed("January 1, 2019");
@@ -71,28 +86,28 @@ describe("Date Parsing", () => {
       it("handles '1995 until 1996 '", () => {
         parser.feed("1995 until 1996");
         const results = parser.results[0];
-        expect(results.botb).toBe("1995-XX-XX");
-        expect(results.eotb).toBe("1995-XX-XX");
-        expect(results.bote).toBe("1996-XX-XX");
-        expect(results.eote).toBe("1996-XX-XX");
+        expect(results.botb).toBe("1995");
+        expect(results.eotb).toBe("1995");
+        expect(results.bote).toBe("1996");
+        expect(results.eote).toBe("1996");
       });
 
       it("handles '1995 until sometime between 1996 and 1997'", () => {
         parser.feed("1995 until sometime between 1996 and 1997");
         const results = parser.results[0];
-        expect(results.botb).toBe("1995-XX-XX");
-        expect(results.eotb).toBe("1995-XX-XX");
-        expect(results.bote).toBe("1996-XX-XX");
-        expect(results.eote).toBe("1997-XX-XX");
+        expect(results.botb).toBe("1995");
+        expect(results.eotb).toBe("1995");
+        expect(results.bote).toBe("1996");
+        expect(results.eote).toBe("1997");
       });
 
       it("handles 'sometime between 1995 and 1996 until 1997'", () => {
         parser.feed("sometime between 1995 and 1996 until 1997");
         const results = parser.results[0];
-        expect(results.botb).toBe("1995-XX-XX");
-        expect(results.eotb).toBe("1996-XX-XX");
-        expect(results.bote).toBe("1997-XX-XX");
-        expect(results.eote).toBe("1997-XX-XX");
+        expect(results.botb).toBe("1995");
+        expect(results.eotb).toBe("1996");
+        expect(results.bote).toBe("1997");
+        expect(results.eote).toBe("1997");
       });
 
       it("handles 'sometime between 1995 and 1996 until sometime between 1997 and 1998'", () => {
@@ -100,10 +115,10 @@ describe("Date Parsing", () => {
           "sometime between 1995 and 1996 until sometime between 1997 and 1998"
         );
         const results = parser.results[0];
-        expect(results.botb).toBe("1995-XX-XX");
-        expect(results.eotb).toBe("1996-XX-XX");
-        expect(results.bote).toBe("1997-XX-XX");
-        expect(results.eote).toBe("1998-XX-XX");
+        expect(results.botb).toBe("1995");
+        expect(results.eotb).toBe("1996");
+        expect(results.bote).toBe("1997");
+        expect(results.eote).toBe("1998");
       });
     });
 
@@ -111,87 +126,87 @@ describe("Date Parsing", () => {
       it("handles 1995 until at least 1996", () => {
         parser.feed("1995 until at least 1996");
         const results = parser.results[0];
-        expect(results.botb).toBe("1995-XX-XX");
-        expect(results.eotb).toBe("1995-XX-XX");
-        expect(results.bote).toBe("1996-XX-XX");
+        expect(results.botb).toBe("1995");
+        expect(results.eotb).toBe("1995");
+        expect(results.bote).toBe("1996");
         expect(results.eote).toBeUndefined();
       });
 
       it("handles 'sometime between 1995 and 1996 until at least 1996'", () => {
         parser.feed("sometime between 1995 and 1996 until at least 1996");
         const results = parser.results[0];
-        expect(results.botb).toBe("1995-XX-XX");
-        expect(results.eotb).toBe("1996-XX-XX");
-        expect(results.bote).toBe("1996-XX-XX");
+        expect(results.botb).toBe("1995");
+        expect(results.eotb).toBe("1996");
+        expect(results.bote).toBe("1996");
         expect(results.eote).toBeUndefined();
       });
 
       it("handles 'sometime between 1995 and 1996 until at least 1997'", () => {
         parser.feed("sometime between 1995 and 1996 until at least 1997");
         const results = parser.results[0];
-        expect(results.botb).toBe("1995-XX-XX");
-        expect(results.eotb).toBe("1996-XX-XX");
-        expect(results.bote).toBe("1997-XX-XX");
+        expect(results.botb).toBe("1995");
+        expect(results.eotb).toBe("1996");
+        expect(results.bote).toBe("1997");
         expect(results.eote).toBeUndefined();
       });
 
       it("handles '1995 until sometime before 1996'", () => {
         parser.feed("1995 until sometime before 1996");
         const results = parser.results[0];
-        expect(results.botb).toBe("1995-XX-XX");
-        expect(results.eotb).toBe("1995-XX-XX");
+        expect(results.botb).toBe("1995");
+        expect(results.eotb).toBe("1995");
         expect(results.bote).toBeUndefined();
-        expect(results.eote).toBe("1996-XX-XX");
+        expect(results.eote).toBe("1996");
       });
       it("handles 'sometime between 1995 and 1996 until sometime before 1997'", () => {
         parser.feed(
           "sometime between 1995 and 1996 until sometime before 1997"
         );
         const results = parser.results[0];
-        expect(results.botb).toBe("1995-XX-XX");
-        expect(results.eotb).toBe("1996-XX-XX");
+        expect(results.botb).toBe("1995");
+        expect(results.eotb).toBe("1996");
         expect(results.bote).toBeUndefined();
-        expect(results.eote).toBe("1997-XX-XX");
+        expect(results.eote).toBe("1997");
       });
       it("handles 'by 1995 until 1996'", () => {
         parser.feed("by 1995 until 1996");
         const results = parser.results[0];
         expect(results.botb).toBeUndefined();
-        expect(results.eotb).toBe("1995-XX-XX");
-        expect(results.bote).toBe("1996-XX-XX");
-        expect(results.eote).toBe("1996-XX-XX");
+        expect(results.eotb).toBe("1995");
+        expect(results.bote).toBe("1996");
+        expect(results.eote).toBe("1996");
       });
       it("handles 'in 1995 until sometime before 1996'", () => {
         parser.feed("in 1995 until sometime before 1996");
         const results = parser.results[0];
         expect(results.botb).toBeUndefined();
-        expect(results.eotb).toBe("1995-XX-XX");
-        expect(results.bote).toBe("1995-XX-XX");
-        expect(results.eote).toBe("1996-XX-XX");
+        expect(results.eotb).toBe("1995");
+        expect(results.bote).toBe("1995");
+        expect(results.eote).toBe("1996");
       });
       it("handles 'by 1995 until sometime between 1996 and 1997'", () => {
         parser.feed("by 1995 until sometime between 1996 and 1997");
         const results = parser.results[0];
         expect(results.botb).toBeUndefined();
-        expect(results.eotb).toBe("1995-XX-XX");
-        expect(results.bote).toBe("1996-XX-XX");
-        expect(results.eote).toBe("1997-XX-XX");
+        expect(results.eotb).toBe("1995");
+        expect(results.bote).toBe("1996");
+        expect(results.eote).toBe("1997");
       });
       it("handles 'after 1995 until 1996'", () => {
         parser.feed("after 1995 until 1996");
         const results = parser.results[0];
-        expect(results.botb).toBe("1995-XX-XX");
+        expect(results.botb).toBe("1995");
         expect(results.eotb).toBeUndefined();
-        expect(results.bote).toBe("1996-XX-XX");
-        expect(results.eote).toBe("1996-XX-XX");
+        expect(results.bote).toBe("1996");
+        expect(results.eote).toBe("1996");
       });
       it("handles 'after 1995 until sometime between 1996 and 1997'", () => {
         parser.feed("after 1995 until sometime between 1996 and 1997");
         const results = parser.results[0];
-        expect(results.botb).toBe("1995-XX-XX");
+        expect(results.botb).toBe("1995");
         expect(results.eotb).toBeUndefined();
-        expect(results.bote).toBe("1996-XX-XX");
-        expect(results.eote).toBe("1997-XX-XX");
+        expect(results.bote).toBe("1996");
+        expect(results.eote).toBe("1997");
       });
     });
 
@@ -200,33 +215,54 @@ describe("Date Parsing", () => {
         parser.feed("by 1995 until sometime before 1996");
         const results = parser.results[0];
         expect(results.botb).toBeUndefined();
-        expect(results.eotb).toBe("1995-XX-XX");
+        expect(results.eotb).toBe("1995");
         expect(results.bote).toBeUndefined();
-        expect(results.eote).toBe("1996-XX-XX");
+        expect(results.eote).toBe("1996");
       });
       it("handles 'by 1995 until at least 1996'", () => {
         parser.feed("by 1995 until at least 1996");
         const results = parser.results[0];
         expect(results.botb).toBeUndefined();
-        expect(results.eotb).toBe("1995-XX-XX");
-        expect(results.bote).toBe("1996-XX-XX");
+        expect(results.eotb).toBe("1995");
+        expect(results.bote).toBe("1996");
         expect(results.eote).toBeUndefined();
       });
       it("handles 'after 1995 until sometime before 1996'", () => {
         parser.feed("after 1995 until sometime before 1996");
         const results = parser.results[0];
-        expect(results.botb).toBe("1995-XX-XX");
+        expect(results.botb).toBe("1995");
         expect(results.eotb).toBeUndefined();
         expect(results.bote).toBeUndefined();
-        expect(results.eote).toBe("1996-XX-XX");
+        expect(results.eote).toBe("1996");
       });
       it("handles 'after 1995 until at least 1996'", () => {
         parser.feed("after 1995 until at least 1996");
         const results = parser.results[0];
-        expect(results.botb).toBe("1995-XX-XX");
+        expect(results.botb).toBe("1995");
         expect(results.eotb).toBeUndefined();
-        expect(results.bote).toBe("1996-XX-XX");
+        expect(results.bote).toBe("1996");
         expect(results.eote).toBeUndefined();
+      });
+    });
+    describe("During dates", () => {
+      it("works with during", () => {
+        parser.feed("during 2019");
+        const results = parser.results[0];
+        expect(results.botb).toBe("2019");
+        expect(results.eotb).toBeUndefined();
+        expect(results.bote).toBeUndefined();
+        expect(results.eote).toBe("2019");
+      });
+      it("works with sometime during", () => {
+        parser.feed("sometime during 2019");
+        const results = parser.results[0];
+        expect(results.botb).toBe("2019");
+        expect(results.eotb).toBeUndefined();
+        expect(results.bote).toBeUndefined();
+        expect(results.eote).toBe("2019");
+      });
+      it("fails with precise dates", () => {
+        expect(() => parser.feed("during July 1, 2018")).toThrow();
       });
     });
 
@@ -436,12 +472,15 @@ describe("Date Parsing", () => {
     it("works blank strings", () => {
       parser.feed("");
       const results = parser.results[0];
-      expect(results).toBeNull();
+      expect(results).toBeUndefined();
     });
-    it("works with explicit string", () => {
+    it("works with explicit 'no date' string", () => {
       parser.feed("no date");
       const results = parser.results[0];
-      expect(results).toBeNull();
+      expect(results.botb).toBeNull();
+      expect(results.bote).toBeNull();
+      expect(results.eotb).toBeNull();
+      expect(results.eote).toBeNull();
     });
     it("fails with garbage strings", () => {
       expect(() => parser.feed("nonsense")).toThrow();

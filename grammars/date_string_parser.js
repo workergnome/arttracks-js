@@ -79,8 +79,8 @@ function constructCentury(d) {
 function constructDecade(d) {
   return {
     decade: Number(d[1]),
-    era: normalizeEra(d[3]),
-    certainty: d[4] !== "?"
+    era: normalizeEra(d[2]),
+    certainty: d[3] !== "?"
   };
 }
 function constructYear(d) {
@@ -142,8 +142,8 @@ function edtf(d) {
   let day = String(d.day).padStart(2,"0");
   let month = String(d.month).padStart(2,"0");
   let year = String(d.year).padStart(4,"0");
-  let decade = String(d.decade).replace(/0$/, "X").padStart(4,"0")
-  let century = String(d.century).replace(/00$/, "XX").padStart(4,"0")
+  let decade = String(d.decade).padStart(4,"0").replace(/0$/, "")
+  let century = String(d.century).padStart(4,"0").replace(/00$/, "")
   let era = d.era == "CE" ? "" : "-"
   let certainty = d.certainty ? "" : "?"
 
@@ -151,16 +151,16 @@ function edtf(d) {
     return `${era}${year}-${month}-${day}${certainty}`;
   }
   else if  (d.month) {
-    return `${era}${year}-${month}-XX${certainty}`;
+    return `${era}${year}-${month}${certainty}`;
   }
   else if  (d.year) {
-    return `${era}${year}-XX-XX${certainty}`;
+    return `${era}${year}${certainty}`;
   }
   else if  (d.decade) {
-    return `${era}${decade}-XX-XX${certainty}`;
+    return `${era}${decade}${certainty}`;
   }
   else if  (d.century) {
-    return `${era}${century}-XX-XX${certainty}`;
+    return `${era}${century}${certainty}`;
   }
 }
 
@@ -200,11 +200,12 @@ function processStartDate(d) {
 var grammar = {
     Lexer: undefined,
     ParserRules: [
-    {"name": "date", "symbols": ["century"], "postprocess": id},
-    {"name": "date", "symbols": ["decade"], "postprocess": id},
-    {"name": "date", "symbols": ["year"], "postprocess": id},
-    {"name": "date", "symbols": ["month"], "postprocess": id},
+    {"name": "date", "symbols": ["imprecise_date"], "postprocess": id},
     {"name": "date", "symbols": ["precise_date"], "postprocess": id},
+    {"name": "imprecise_date", "symbols": ["century"], "postprocess": id},
+    {"name": "imprecise_date", "symbols": ["decade"], "postprocess": id},
+    {"name": "imprecise_date", "symbols": ["year"], "postprocess": id},
+    {"name": "imprecise_date", "symbols": ["month"], "postprocess": id},
     {"name": "precise_date", "symbols": ["day"], "postprocess": id},
     {"name": "precise_date", "symbols": ["euroday"], "postprocess": id},
     {"name": "precise_date", "symbols": ["slashdate"], "postprocess": id},
@@ -367,6 +368,7 @@ var grammar = {
     {"name": "date_string", "symbols": ["date_phrase"], "postprocess": id},
     {"name": "date_string", "symbols": ["on_date"], "postprocess": id},
     {"name": "date_string", "symbols": ["no_date"], "postprocess": id},
+    {"name": "date_string", "symbols": ["during_date"], "postprocess": id},
     {"name": "date_phrase$subexpression$1", "symbols": ["start_clause"]},
     {"name": "date_phrase$subexpression$1", "symbols": ["end_clause"]},
     {"name": "date_phrase$subexpression$1$subexpression$1", "symbols": ["start_clause", "end_clause"], "postprocess": (d) => [d[0][0],d[1][0]]},
@@ -376,8 +378,7 @@ var grammar = {
     {"name": "on_date", "symbols": ["on_date$string$1", "__", "precise_date"], "postprocess": formatOnDate},
     {"name": "no_date$subexpression$1$string$1", "symbols": [{"literal":"n"}, {"literal":"o"}, {"literal":" "}, {"literal":"d"}, {"literal":"a"}, {"literal":"t"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "no_date$subexpression$1", "symbols": ["no_date$subexpression$1$string$1"]},
-    {"name": "no_date$subexpression$1", "symbols": []},
-    {"name": "no_date", "symbols": ["no_date$subexpression$1"], "postprocess": (d) => null},
+    {"name": "no_date", "symbols": ["no_date$subexpression$1"], "postprocess": (d) => ({botb: null, eotb: null, bote: null, eote: null})},
     {"name": "start_clause", "symbols": ["in_date"]},
     {"name": "start_clause", "symbols": ["between_begin"]},
     {"name": "start_clause", "symbols": ["by_date"]},
@@ -396,8 +397,11 @@ var grammar = {
     {"name": "after_date$ebnf$1", "symbols": ["sometime"], "postprocess": id},
     {"name": "after_date$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "after_date", "symbols": ["after_date$ebnf$1", "after", "date"], "postprocess": (d) => ({botb: edtf(d[2])})},
-    {"name": "between_begin", "symbols": ["between", "date", "and", "date"], "postprocess": (d) => ({botb: edtf(d[1]),eotb: edtf(d[3])})},
-    {"name": "between_end", "symbols": ["between", "date", "and", "date"], "postprocess": (d) => ({bote: edtf(d[1]),eote: edtf(d[3])})},
+    {"name": "during_date$ebnf$1", "symbols": ["sometime"], "postprocess": id},
+    {"name": "during_date$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "during_date", "symbols": ["during_date$ebnf$1", "during", "imprecise_date"], "postprocess": (d) => ({botb: edtf(d[2]), eote: edtf(d[2])})},
+    {"name": "between_begin", "symbols": ["between", "date", "and", "date"], "postprocess": (d) => ({botb: edtf(d[1]), eotb: edtf(d[3])})},
+    {"name": "between_end", "symbols": ["between", "date", "and", "date"], "postprocess": (d) => ({bote: edtf(d[1]), eote: edtf(d[3])})},
     {"name": "u_before_date", "symbols": ["before_phrase", "date"], "postprocess": (d) => ({eote: edtf(d[1])})},
     {"name": "before_date", "symbols": ["before_phrase", "date"], "postprocess": (d) => ({eotb: edtf(d[1])})},
     {"name": "at_least_date", "symbols": ["at_least", "date"], "postprocess": (d) => ({bote: edtf(d[1])})},
@@ -438,6 +442,10 @@ var grammar = {
     {"name": "until$subexpression$1", "symbols": [{"literal":"u"}]},
     {"name": "until$string$1", "symbols": [{"literal":"n"}, {"literal":"t"}, {"literal":"i"}, {"literal":"l"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "until", "symbols": ["_", "until$subexpression$1", "until$string$1", "__"], "postprocess": null},
+    {"name": "during$subexpression$1", "symbols": [{"literal":"D"}]},
+    {"name": "during$subexpression$1", "symbols": [{"literal":"d"}]},
+    {"name": "during$string$1", "symbols": [{"literal":"u"}, {"literal":"r"}, {"literal":"i"}, {"literal":"n"}, {"literal":"g"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "during", "symbols": ["_", "during$subexpression$1", "during$string$1", "__"], "postprocess": null},
     {"name": "no_later_than$subexpression$1$string$1", "symbols": [{"literal":"n"}, {"literal":"o"}, {"literal":" "}, {"literal":"l"}, {"literal":"a"}, {"literal":"t"}, {"literal":"e"}, {"literal":"r"}, {"literal":" "}, {"literal":"t"}, {"literal":"h"}, {"literal":"a"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "no_later_than$subexpression$1", "symbols": ["no_later_than$subexpression$1$string$1"]},
     {"name": "no_later_than", "symbols": ["no_later_than$subexpression$1", "__"], "postprocess": null},

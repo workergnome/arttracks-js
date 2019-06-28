@@ -75,8 +75,8 @@ function constructCentury(d) {
 function constructDecade(d) {
   return {
     decade: Number(d[1]),
-    era: normalizeEra(d[3]),
-    certainty: d[4] !== "?"
+    era: normalizeEra(d[2]),
+    certainty: d[3] !== "?"
   };
 }
 function constructYear(d) {
@@ -142,16 +142,18 @@ function constructIsoDate(d) {
 
 # Base rule
 # ------------------
-date ->   century      {% id %}
-        | decade       {% id %}
-        | year         {% id %}
-        | month        {% id %}
-        | precise_date {% id %}
+date           ->  imprecise_date {% id %} 
+                 | precise_date   {% id %}
 
-precise_date -> day    {% id %}
-        | euroday      {% id %}
-        | slashdate    {% id %}
-        | isodate      {% id %}
+imprecise_date ->  century        {% id %}
+                 | decade         {% id %}
+                 | year           {% id %}
+                 | month          {% id %}
+     
+precise_date   ->  day            {% id %}
+                 | euroday        {% id %}
+                 | slashdate      {% id %}
+                 | isodate        {% id %}
     
 # Core date rules
 # ------------------   

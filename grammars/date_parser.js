@@ -79,8 +79,8 @@ function constructCentury(d) {
 function constructDecade(d) {
   return {
     decade: Number(d[1]),
-    era: normalizeEra(d[3]),
-    certainty: d[4] !== "?"
+    era: normalizeEra(d[2]),
+    certainty: d[3] !== "?"
   };
 }
 function constructYear(d) {
@@ -139,11 +139,12 @@ function constructIsoDate(d) {
 var grammar = {
     Lexer: undefined,
     ParserRules: [
-    {"name": "date", "symbols": ["century"], "postprocess": id},
-    {"name": "date", "symbols": ["decade"], "postprocess": id},
-    {"name": "date", "symbols": ["year"], "postprocess": id},
-    {"name": "date", "symbols": ["month"], "postprocess": id},
+    {"name": "date", "symbols": ["imprecise_date"], "postprocess": id},
     {"name": "date", "symbols": ["precise_date"], "postprocess": id},
+    {"name": "imprecise_date", "symbols": ["century"], "postprocess": id},
+    {"name": "imprecise_date", "symbols": ["decade"], "postprocess": id},
+    {"name": "imprecise_date", "symbols": ["year"], "postprocess": id},
+    {"name": "imprecise_date", "symbols": ["month"], "postprocess": id},
     {"name": "precise_date", "symbols": ["day"], "postprocess": id},
     {"name": "precise_date", "symbols": ["euroday"], "postprocess": id},
     {"name": "precise_date", "symbols": ["slashdate"], "postprocess": id},

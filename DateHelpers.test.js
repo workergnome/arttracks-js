@@ -45,6 +45,14 @@ describe("ISO generation", () => {
   });
 });
 
+describe("internal 0-duration intervals", () => {
+  it("handles overlapping decades", () => {
+    const results = DateHelpers.createIsoDates({ bote: "2000", eotb: "2000" });
+    expect(results.eotb).toBe("2000-01-01T00:00:00.000Z");
+    expect(results.bote).toBe("2000-12-31T23:59:59.999Z");
+  });
+});
+
 describe("UTC generation", () => {
   it("returns null when passed null", () => {
     expect(DateHelpers.createUTCDates(null)).toBeNull();

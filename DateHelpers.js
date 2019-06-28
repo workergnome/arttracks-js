@@ -6,11 +6,17 @@ class DateHelpers {
     return new Date(d);
   }
   static _eotb(obj) {
-    const d = edtf(obj.eotb).max;
+    let d = edtf(obj.eotb).max;
+    if (obj.bote && obj.eotb == obj.bote) {
+      d = edtf(obj.eotb).min;
+    }
     return new Date(d);
   }
   static _bote(obj) {
-    const d = edtf(obj.bote).min;
+    let d = edtf(obj.bote).min;
+    if (obj.eotb && obj.eotb == obj.bote) {
+      d = edtf(obj.bote).max;
+    }
     return new Date(d);
   }
   static _eote(obj) {

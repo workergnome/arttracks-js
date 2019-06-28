@@ -1,4 +1,14 @@
 import CulturalDates from "./CulturalDates.js";
+import edtf from "edtf";
+
+describe("edtf tests", () => {
+  it("parses masked decades", () => {
+    expect(edtf("199?").edtf).toEqual("199?");
+  });
+  it("parses masked centuries", () => {
+    expect(edtf("19?").edtf).toEqual("19?");
+  });
+});
 
 describe("CulturalDates.js", () => {
   let cd = null;
@@ -48,14 +58,14 @@ describe("CulturalDates.js", () => {
       expect(cd.parse(data)).toBe(null);
     });
 
-    it("does nothing with blank date elements", () => {
+    it("does returns 'no date' with blank date elements", () => {
       const data = {
         botb: null,
         eotb: null,
         bote: null,
         eote: null
       };
-      expect(cd.parse(data)).toBe(null);
+      expect(cd.parse(data)).toContain("no date");
     });
 
     it("does nothing with invalid date elements", () => {
@@ -133,6 +143,29 @@ describe("CulturalDates.js", () => {
         eote: "1980-02-14"
       };
       expect(cd.parse(data)).toContain("on February 14, 1980");
+    });
+
+    it("handles 'during' case with months", () => {
+      const data = {
+        botb: "1980-02",
+        eote: "1980-02"
+      };
+      expect(cd.parse(data)).toContain("sometime during February 1980");
+    });
+    it("handles 'during' case with decades", () => {
+      const data = {
+        botb: "198",
+        eote: "198"
+      };
+      expect(cd.parse(data)).toContain("during the 1980s");
+    });
+
+    it("handles 'during' case with centuries", () => {
+      const data = {
+        botb: "19",
+        eote: "19"
+      };
+      expect(cd.parse(data)).toContain("during the 20th century");
     });
 
     it("handles basic until dates", () => {
@@ -221,6 +254,15 @@ describe("CulturalDates.js", () => {
       };
       expect(cd.parse(data)).toContain("the 1980s");
     });
+    it("handles decades", () => {
+      const data = {
+        botb: "198?",
+        eotb: "198?",
+        bote: null,
+        eote: null
+      };
+      expect(cd.parse(data)).toContain("the 1980s?");
+    });
     it("handles centuries", () => {
       const data = {
         botb: "19",
@@ -228,8 +270,18 @@ describe("CulturalDates.js", () => {
         bote: null,
         eote: null
       };
-      expect(cd.parse(data)).toContain("the 20th Century");
+      expect(cd.parse(data)).toContain("the 20th century");
     });
+    it("handles uncertain centuries", () => {
+      const data = {
+        botb: "19?",
+        eotb: "19?",
+        bote: null,
+        eote: null
+      };
+      expect(cd.parse(data)).toContain("the 20th century?");
+    });
+
     it("handles centuries BCE", () => {
       const data = {
         botb: "-01",
@@ -237,16 +289,16 @@ describe("CulturalDates.js", () => {
         bote: null,
         eote: null
       };
-      expect(cd.parse(data)).toContain("the 1st Century BCE");
+      expect(cd.parse(data)).toContain("the 1st century BCE");
     });
-    it("handles the zeroth Century", () => {
+    it("handles the zeroth century", () => {
       const data = {
         botb: "00",
         eotb: "00",
         bote: null,
         eote: null
       };
-      expect(cd.parse(data)).toContain("the 1st Century");
+      expect(cd.parse(data)).toContain("the 1st century");
     });
   });
 });

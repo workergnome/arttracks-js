@@ -25,6 +25,7 @@ describe("Date Parsing", () => {
       expect(results.month).toEqual(12);
       expect(results.day).toEqual(2);
     });
+
     it("works with days w/o commas", () => {
       parser.feed("December 2 1990");
       const results = parser.results[0];
@@ -183,11 +184,24 @@ describe("Date Parsing", () => {
       const results = parser.results[0];
       expect(results.decade).toEqual(1990);
       expect(results.era).toEqual("CE");
+      expect(results.certainty).toEqual(true);
     });
     it("works without a 'the'", () => {
       parser.feed("1990s");
       const results = parser.results[0];
       expect(results.decade).toEqual(1990);
+    });
+    it("works with undertainty'", () => {
+      parser.feed("1990s?");
+      const results = parser.results[0];
+      expect(results.decade).toEqual(1990);
+      expect(results.certainty).toEqual(false);
+    });
+    it("works with BCE'", () => {
+      parser.feed("1990s BCE");
+      const results = parser.results[0];
+      expect(results.decade).toEqual(1990);
+      expect(results.era).toEqual("BCE");
     });
   });
   describe("Euro Dates", () => {

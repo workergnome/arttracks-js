@@ -12,7 +12,20 @@ export default class CulturalDates {
    * @param  {String} options.eote - The End of the End as an EDTF date
    * @return {String}              - The interval expressed as natural language English
    */
-  parse({ botb, eotb, bote, eote }) {
+  parse(obj) {
+    if (obj.null || Object.keys(obj).length == 0) {
+      return null;
+    }
+
+    const botb = obj.botb;
+    const bote = obj.bote;
+    const eotb = obj.eotb;
+    const eote = obj.eote;
+
+    if (!botb && !bote && !eotb && !eote) {
+      return "no date";
+    }
+
     // check for valid dates
     try {
       botb && edtf(botb);
@@ -26,6 +39,18 @@ export default class CulturalDates {
     // Handle special "throughout" case
     if (eotb && bote && !(botb || eote) && eotb === bote) {
       return `throughout ${this._format(eotb)}`;
+    }
+
+    // Handle special "during" case
+    if (botb && eote && !(bote || eotb) && botb === eote) {
+      let testDate = edtf(eote);
+      if (
+        testDate.precision < 3 ||
+        testDate.type == "Century" ||
+        testDate.type == "Decade"
+      ) {
+        return `sometime during ${this._format(botb)}`;
+      }
     }
 
     // Handle special "throughout, until" case
@@ -42,7 +67,7 @@ export default class CulturalDates {
       bote &&
       eote &&
       (botb === eotb && bote === eote && botb === eote) &&
-      (edtf(botb).precision === 3 && edtf(botb).precision === 3)
+      edtf(botb).precision === 3
     ) {
       return `on ${this._format(botb)}`;
     }
@@ -129,7 +154,7 @@ export default class CulturalDates {
 
     let date = edtf(dateString);
 
-    if (date.uncertain.value > 0) {
+    if (date.uncertain.value > 0 || date.uncertain === true) {
       certain = false;
       date.uncertain = false;
     }
@@ -142,7 +167,7 @@ export default class CulturalDates {
           str = date.format("en-US", { month: "long" });
       }
     } else if (date.type === "Decade") {
-      str = `the ${date}0s`;
+      str = `the ${date.decade}0s`;
     } else if (date.type === "Century") {
       let century = date.century;
       if (century >= 0) {
@@ -151,7 +176,8 @@ export default class CulturalDates {
         bce = true;
         century = Math.abs(century);
       }
-      str = `the ${this._ordinalize(century)} Century`;
+
+      str = `the ${this._ordinalize(century)} century`;
     }
     if (certain === false) {
       str += "?";
