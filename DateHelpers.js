@@ -24,14 +24,18 @@ class DateHelpers {
     return new Date(d);
   }
 
+  static generateString(inputObject) {
+    let cd = new CulturalDates();
+    return cd.parse(inputObject);
+  }
+
   static createLinkedArt(inputObject, url, label) {
     if (!inputObject) {
       return null;
     }
     let iso = this.createIsoDates(inputObject);
     if (!label) {
-      let cd = new CulturalDates();
-      label = cd.parse(inputObject);
+      label = this.generateString(inputObject);
     }
     return JSON.parse(
       JSON.stringify({

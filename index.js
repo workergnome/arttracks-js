@@ -13,6 +13,7 @@ function parse_date(string, opts = {}) {
     const base_results = parser.results[0];
     if (base_results) {
       results = {
+        string: DateHelpers.generateString(base_results),
         edtf: base_results,
         iso8061: DateHelpers.createIsoDates(base_results),
         utc: DateHelpers.createUTCDates(base_results)
