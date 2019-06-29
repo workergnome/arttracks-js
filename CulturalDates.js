@@ -13,6 +13,7 @@ export default class CulturalDates {
    * @return {String}              - The interval expressed as natural language English
    */
   parse(obj) {
+    // Handle empty data
     if (obj.null || Object.keys(obj).length == 0) {
       return null;
     }
@@ -22,6 +23,7 @@ export default class CulturalDates {
     const eotb = obj.eotb;
     const eote = obj.eote;
 
+    // Handle "no date"
     if (!botb && !bote && !eotb && !eote) {
       return "no date";
     }
@@ -72,6 +74,7 @@ export default class CulturalDates {
       return `on ${this._format(botb)}`;
     }
 
+    // Calculate the beginning date phrase
     let firstString = null;
     if (botb && eotb) {
       if (botb === eotb) {
@@ -87,6 +90,7 @@ export default class CulturalDates {
       firstString = `by ${this._format(eotb)}`;
     }
 
+    // Calculate the ending date phrase
     let secondString = null;
     if (bote && eote) {
       if (bote === eote) {
@@ -102,6 +106,7 @@ export default class CulturalDates {
       secondString = `no later than ${this._format(eote)}`;
     }
 
+    // Join the phrases
     if (firstString && secondString) {
       return `${firstString} until ${secondString}`;
     } else if (secondString) {
@@ -146,45 +151,42 @@ export default class CulturalDates {
     let str = null;
     let certain = true;
 
-    // workaround for BCE full date bug in edtf.js
-    if (dateString.startsWith("-") && dateString.match(/-/g).length === 3) {
+    // figure out if the date is BCE or CE
+    if (dateString.startsWith("-")) {
       bce = true;
       dateString = dateString.slice(1);
     }
 
     let date = edtf(dateString);
 
+    // Figure out if the date is certain or not
     if (date.uncertain.value > 0 || date.uncertain === true) {
       certain = false;
       date.uncertain = false;
     }
 
+    // Write out the base date string
     if (date.type === "Date") {
-      switch (date.precision) {
-        case 1:
-        case 2:
-        case 3:
-          str = date.format("en-US", { month: "long" });
-      }
+      str = date.format("en-US", { month: "long" });
     } else if (date.type === "Decade") {
       str = `the ${date.decade}0s`;
     } else if (date.type === "Century") {
-      let century = date.century;
-      if (century >= 0) {
-        century += 1;
-      } else {
-        bce = true;
-        century = Math.abs(century);
-      }
-
+      let century = bce ? date.century : date.century + 1;
       str = `the ${this._ordinalize(century)} century`;
     }
+
+    // Append era to the date string
+    if (bce) {
+      str += " BCE";
+    } else if (date.year < 1000) {
+      str += " CE";
+    }
+
+    // append certainty to the date string
     if (certain === false) {
       str += "?";
     }
-    if (bce) {
-      str += " BCE";
-    }
+
     return str;
   }
 }

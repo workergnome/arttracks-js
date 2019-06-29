@@ -107,12 +107,21 @@ describe("CulturalDates.js", () => {
     });
     it("handles uncertain basic dates", () => {
       const data = {
+        botb: "1980-02-14?",
+        eotb: "1980-02-14?",
+        bote: null,
+        eote: null
+      };
+      expect(cd.parse(data)).toContain("February 14, 1980?");
+    });
+    it("handles uncertain basic dates BCE", () => {
+      const data = {
         botb: "-1980-02-14?",
         eotb: "-1980-02-14?",
         bote: null,
         eote: null
       };
-      expect(cd.parse(data)).toContain("February 14, 1980?");
+      expect(cd.parse(data)).toContain("February 14, 1980 BCE?");
     });
 
     it("handles 'throughout 1980'", () => {
@@ -185,6 +194,15 @@ describe("CulturalDates.js", () => {
         eote: "1980-02-14"
       };
       expect(cd.parse(data)).toContain("1970 until February 14, 1980");
+    });
+    it("handles basic x until y dates", () => {
+      const data = {
+        botb: "-1970",
+        eotb: "-1970",
+        bote: null,
+        eote: null
+      };
+      expect(cd.parse(data)).toContain("1970 BCE");
     });
 
     it("handles botb dates", () => {
@@ -280,6 +298,25 @@ describe("CulturalDates.js", () => {
         eote: null
       };
       expect(cd.parse(data)).toContain("the 20th century?");
+    });
+
+    it("shows CE for dates less than 1000 CE", () => {
+      const data = {
+        botb: "0100",
+        eotb: "0100",
+        bote: null,
+        eote: null
+      };
+      expect(cd.parse(data)).toContain("100 CE");
+    });
+    it("doesn't show CE for dates greater than 1000 CE", () => {
+      const data = {
+        botb: "1000",
+        eotb: "1000",
+        bote: null,
+        eote: null
+      };
+      expect(cd.parse(data)).toContain("100");
     });
 
     it("handles centuries BCE", () => {
