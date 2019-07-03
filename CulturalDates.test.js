@@ -114,6 +114,26 @@ describe("CulturalDates.js", () => {
       };
       expect(cd.parse(data)).toContain("February 14, 1980?");
     });
+    it("handles approximate basic dates", () => {
+      const data = {
+        botb: "1980-02-14~",
+        eotb: "1980-02-14~",
+        bote: null,
+        eote: null
+      };
+      expect(cd.parse(data)).toContain("circa February 14, 1980");
+    });
+
+    it("handles approximate uncertain basic dates", () => {
+      const data = {
+        botb: "1980-02-14%",
+        eotb: "1980-02-14%",
+        bote: null,
+        eote: null
+      };
+      expect(cd.parse(data)).toContain("circa February 14, 1980?");
+    });
+
     it("handles uncertain basic dates BCE", () => {
       const data = {
         botb: "-1980-02-14?",

@@ -29,6 +29,34 @@ class DateHelpers {
     return cd.parse(inputObject);
   }
 
+  static generateIdentifier(string, url) {
+    let val = JSON.parse(`
+        {
+          "id": "${url}", 
+          "type": "Name", 
+          "classified_as": [
+            {
+              "id": "http://vocab.getty.edu/aat/300404670", 
+              "type": "Type", 
+              "_label": "Primary Name"
+            }
+          ], 
+          "language": [
+            {
+              "id": "http://vocab.getty.edu/aat/300388277", 
+              "type": "Language", 
+              "_label": "English"
+            }
+          ], 
+          "content": "${string}"
+        }
+    `);
+    if (!url) {
+      delete val.url;
+    }
+    return val;
+  }
+
   static createLinkedArt(inputObject, url, label) {
     if (!inputObject) {
       return null;
@@ -37,19 +65,23 @@ class DateHelpers {
     if (!label) {
       label = this.generateString(inputObject);
     }
-    return JSON.parse(
-      JSON.stringify({
-        timespan: {
-          id: url,
-          type: "TimeSpan",
-          _label: label,
-          begin_of_the_begin: iso.botb,
-          end_of_the_begin: iso.eotb,
-          begin_of_the_end: iso.bote,
-          end_of_the_end: iso.eote
-        }
-      })
-    );
+    let val = {
+      timespan: {
+        type: "TimeSpan",
+        _label: label,
+        identified_by: [this.generateIdentifier(label, url ? url : null)],
+        sometime_within: `${inputObject.botb || ""}/${inputObject.eote || ""}`,
+        throughout: `${inputObject.eotb || ""}/${inputObject.bote || ""}`,
+        begin_of_the_begin: iso.botb,
+        end_of_the_begin: iso.eotb,
+        begin_of_the_end: iso.bote,
+        end_of_the_end: iso.eote
+      }
+    };
+    if (url) {
+      val.timespan.id = url;
+    }
+    return val;
   }
 
   static createUTCDates(inputObject) {

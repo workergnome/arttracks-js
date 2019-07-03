@@ -137,6 +137,13 @@ function constructIsoDate(d) {
   }
 }
 
+function addCirca(d) {
+
+  let val = d[1];
+  val.approximate = !!d[0];
+  return val;
+}
+
 
 function edtf(d) {
   let day = String(d.day).padStart(2,"0");
@@ -145,22 +152,27 @@ function edtf(d) {
   let decade = String(d.decade).padStart(4,"0").replace(/0$/, "")
   let century = String(d.century).padStart(4,"0").replace(/00$/, "")
   let era = d.era == "CE" ? "" : "-"
-  let certainty = d.certainty ? "" : "?"
+
+  let suffix = "";
+  if (d.certainty && d.approximate) { suffix = "~"}
+  else if (!d.certainty && d.approximate) { suffix = "%"}
+  else if (!d.certainty && !d.approximate) { suffix = "?"}
+
 
   if(d.day) {
-    return `${era}${year}-${month}-${day}${certainty}`;
+    return `${era}${year}-${month}-${day}${suffix}`;
   }
   else if  (d.month) {
-    return `${era}${year}-${month}${certainty}`;
+    return `${era}${year}-${month}${suffix}`;
   }
   else if  (d.year) {
-    return `${era}${year}${certainty}`;
+    return `${era}${year}${suffix}`;
   }
   else if  (d.decade) {
-    return `${era}${decade}${certainty}`;
+    return `${era}${decade}${suffix}`;
   }
   else if  (d.century) {
-    return `${era}${century}${certainty}`;
+    return `${era}${century}${suffix}`;
   }
 }
 
@@ -200,8 +212,11 @@ function processStartDate(d) {
 var grammar = {
     Lexer: undefined,
     ParserRules: [
-    {"name": "date", "symbols": ["imprecise_date"], "postprocess": id},
-    {"name": "date", "symbols": ["precise_date"], "postprocess": id},
+    {"name": "date$ebnf$1", "symbols": ["circa"], "postprocess": id},
+    {"name": "date$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "date", "symbols": ["date$ebnf$1", "base_date"], "postprocess": addCirca},
+    {"name": "base_date", "symbols": ["imprecise_date"], "postprocess": id},
+    {"name": "base_date", "symbols": ["precise_date"], "postprocess": id},
     {"name": "imprecise_date", "symbols": ["century"], "postprocess": id},
     {"name": "imprecise_date", "symbols": ["decade"], "postprocess": id},
     {"name": "imprecise_date", "symbols": ["year"], "postprocess": id},
@@ -210,16 +225,14 @@ var grammar = {
     {"name": "precise_date", "symbols": ["euroday"], "postprocess": id},
     {"name": "precise_date", "symbols": ["slashdate"], "postprocess": id},
     {"name": "precise_date", "symbols": ["isodate"], "postprocess": id},
-    {"name": "century$ebnf$1$string$1", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"e"}, {"literal":" "}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "century$ebnf$1", "symbols": ["century$ebnf$1$string$1"], "postprocess": id},
+    {"name": "century$ebnf$1", "symbols": ["the"], "postprocess": id},
     {"name": "century$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "century$ebnf$2", "symbols": ["era"], "postprocess": id},
     {"name": "century$ebnf$2", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "century$ebnf$3", "symbols": ["certainty"], "postprocess": id},
     {"name": "century$ebnf$3", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "century", "symbols": ["century$ebnf$1", "century_number", "__", "century_word", "century$ebnf$2", "century$ebnf$3"], "postprocess": constructCentury},
-    {"name": "decade$ebnf$1$string$1", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"e"}, {"literal":" "}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "decade$ebnf$1", "symbols": ["decade$ebnf$1$string$1"], "postprocess": id},
+    {"name": "decade$ebnf$1", "symbols": ["the"], "postprocess": id},
     {"name": "decade$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "decade$ebnf$2", "symbols": ["era"], "postprocess": id},
     {"name": "decade$ebnf$2", "symbols": [], "postprocess": function(d) {return null;}},
@@ -296,6 +309,13 @@ var grammar = {
     {"name": "ordinal_suffix$string$4", "symbols": [{"literal":"r"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "ordinal_suffix", "symbols": ["ordinal_suffix$string$4"], "postprocess": (d) => null},
     {"name": "era", "symbols": ["_", "era_names"], "postprocess": d => d[1]},
+    {"name": "the$subexpression$1$string$1", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "the$subexpression$1", "symbols": ["the$subexpression$1$string$1"]},
+    {"name": "the$subexpression$1$string$2", "symbols": [{"literal":"T"}, {"literal":"h"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "the$subexpression$1", "symbols": ["the$subexpression$1$string$2"]},
+    {"name": "the", "symbols": ["the$subexpression$1", "__"], "postprocess": null},
+    {"name": "circa$string$1", "symbols": [{"literal":"c"}, {"literal":"i"}, {"literal":"r"}, {"literal":"c"}, {"literal":"a"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "circa", "symbols": ["circa$string$1", "__"], "postprocess": id},
     {"name": "certainty", "symbols": [{"literal":"?"}], "postprocess": id},
     {"name": "comma", "symbols": [{"literal":","}], "postprocess": null},
     {"name": "int$ebnf$1", "symbols": [/[0-9]/]},
@@ -388,6 +408,7 @@ var grammar = {
     {"name": "end_clause$subexpression$1", "symbols": ["between_end"]},
     {"name": "end_clause$subexpression$1", "symbols": ["at_least_date"]},
     {"name": "end_clause$subexpression$1", "symbols": ["u_before_date"]},
+    {"name": "end_clause$subexpression$1", "symbols": ["u_after_date"]},
     {"name": "end_clause$subexpression$1", "symbols": ["just_an_end_date"]},
     {"name": "end_clause", "symbols": ["until", "end_clause$subexpression$1"], "postprocess": (d) => d[1]},
     {"name": "just_a_start_date", "symbols": ["date"], "postprocess": processStartDate},
@@ -397,14 +418,17 @@ var grammar = {
     {"name": "after_date$ebnf$1", "symbols": ["sometime"], "postprocess": id},
     {"name": "after_date$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "after_date", "symbols": ["after_date$ebnf$1", "after", "date"], "postprocess": (d) => ({botb: edtf(d[2])})},
-    {"name": "during_date$ebnf$1", "symbols": ["sometime"], "postprocess": id},
-    {"name": "during_date$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
-    {"name": "during_date", "symbols": ["during_date$ebnf$1", "during", "imprecise_date"], "postprocess": (d) => ({botb: edtf(d[2]), eote: edtf(d[2])})},
+    {"name": "u_after_date$ebnf$1", "symbols": ["sometime"], "postprocess": id},
+    {"name": "u_after_date$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "u_after_date", "symbols": ["u_after_date$ebnf$1", "after", "date"], "postprocess": (d) => ({bote: edtf(d[2])})},
     {"name": "between_begin", "symbols": ["between", "date", "and", "date"], "postprocess": (d) => ({botb: edtf(d[1]), eotb: edtf(d[3])})},
     {"name": "between_end", "symbols": ["between", "date", "and", "date"], "postprocess": (d) => ({bote: edtf(d[1]), eote: edtf(d[3])})},
     {"name": "u_before_date", "symbols": ["before_phrase", "date"], "postprocess": (d) => ({eote: edtf(d[1])})},
     {"name": "before_date", "symbols": ["before_phrase", "date"], "postprocess": (d) => ({eotb: edtf(d[1])})},
     {"name": "at_least_date", "symbols": ["at_least", "date"], "postprocess": (d) => ({bote: edtf(d[1])})},
+    {"name": "during_date$ebnf$1", "symbols": ["sometime"], "postprocess": id},
+    {"name": "during_date$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "during_date", "symbols": ["during_date$ebnf$1", "during", "imprecise_date"], "postprocess": (d) => ({botb: edtf(d[2]), eote: edtf(d[2])})},
     {"name": "throughout$subexpression$1$subexpression$1$subexpression$1", "symbols": [{"literal":"T"}]},
     {"name": "throughout$subexpression$1$subexpression$1$subexpression$1", "symbols": [{"literal":"t"}]},
     {"name": "throughout$subexpression$1$subexpression$1$string$1", "symbols": [{"literal":"h"}, {"literal":"r"}, {"literal":"o"}, {"literal":"u"}, {"literal":"g"}, {"literal":"h"}, {"literal":"o"}, {"literal":"u"}, {"literal":"t"}], "postprocess": function joiner(d) {return d.join('');}},

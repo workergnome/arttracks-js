@@ -132,7 +132,15 @@ function constructIsoDate(d) {
     all: d
   }
 }
+
+function addCirca(d) {
+
+  let val = d[1];
+  val.approximate = !!d[0];
+  return val;
+}
 %}
+
 
 
 
@@ -142,7 +150,8 @@ function constructIsoDate(d) {
 
 # Base rule
 # ------------------
-date           ->  imprecise_date {% id %} 
+date -> circa:? base_date {% addCirca %}
+base_date      ->  imprecise_date {% id %} 
                  | precise_date   {% id %}
 
 imprecise_date ->  century        {% id %}
@@ -157,8 +166,8 @@ precise_date   ->  day            {% id %}
     
 # Core date rules
 # ------------------   
-century   -> "the ":? century_number __ century_word  era:? certainty:?        {% constructCentury %}
-decade    -> "the ":? decade_number era:? certainty:?                          {% constructDecade %}
+century   -> the:? century_number __ century_word  era:? certainty:?           {% constructCentury %}
+decade    -> the:? decade_number era:? certainty:?                             {% constructDecade %}
 year      -> year_number era:? certainty:?                                     {% constructYear %}
 month     -> month_name comma:? __ year_number era:? certainty:?               {% constructMonth %}
 day       -> month_name __ day_with_ordinal comma:? __ year_number era:? certainty:? {% constructDay %}
@@ -182,11 +191,13 @@ era            -> _ era_names                       {% d => d[1] %}
 
 # Special characters
 # ------------------
-certainty      -> "?"          {% id %}
-comma          -> ","          {% null %}
-int            -> [0-9]:+      {% (d) => ({v:d[0].join("")}) %}
-_              -> [\s]:*       {% function(d) {return null} %}
-__             -> [\s]:+       {% function(d) {return null} %}
+the       -> ("the" | "The" ) __  {% null %}
+circa     -> "circa" __           {% id %}
+certainty -> "?"                  {% id %}
+comma     -> ","                  {% null %}
+int       -> [0-9]:+              {% (d) => ({v:d[0].join("")}) %}
+_         -> [\s]:*               {% function(d) {return null} %}
+__        -> [\s]:+               {% function(d) {return null} %}
 
 
 # Dictionaries

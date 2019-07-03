@@ -8,6 +8,37 @@ describe("Date Parsing", () => {
     parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
   });
 
+  //----------------------------------------------------------------------------
+  describe("circa dates", () => {
+    it("works without 'circa'", () => {
+      parser.feed("December 25th, 1990");
+      const results = parser.results[0];
+      expect(results.approximate).toEqual(false);
+    });
+    it("works with 'circa'", () => {
+      parser.feed("circa December 25th, 1990");
+      const results = parser.results[0];
+      expect(results.approximate).toEqual(true);
+    });
+    it("works with 'years'", () => {
+      parser.feed("circa  1990");
+      const results = parser.results[0];
+      expect(results.approximate).toEqual(true);
+    });
+    it("works with 'years'", () => {
+      parser.feed("circa the 17th century");
+      const results = parser.results[0];
+      expect(results.approximate).toEqual(true);
+    });
+    it("works with uncertainty", () => {
+      parser.feed("circa December 25th, 1990?");
+      const results = parser.results[0];
+      expect(results.approximate).toEqual(true);
+      expect(results.certainty).toEqual(false);
+    });
+  });
+
+  //----------------------------------------------------------------------------
   describe("Day Precision (default)", () => {
     it("works with days", () => {
       parser.feed("December 25th, 1990");
@@ -49,6 +80,8 @@ describe("Date Parsing", () => {
       expect(results.era).toEqual("CE");
     });
   });
+
+  //----------------------------------------------------------------------------
   describe("Year Precision", () => {
     it("basic years work", () => {
       parser.feed("1990");
@@ -100,6 +133,8 @@ describe("Date Parsing", () => {
       expect(results.certainty).toEqual(false);
     });
   });
+
+  //----------------------------------------------------------------------------
   describe("Century Precision", () => {
     it("works with centuries", () => {
       parser.feed("the 19th century");
@@ -125,7 +160,14 @@ describe("Date Parsing", () => {
       const results = parser.results[0];
       expect(results.certainty).toEqual(false);
     });
+    it("handles capitalized The", () => {
+      parser.feed("The 21st century");
+      const results = parser.results[0];
+      expect(results.century).toBe(2000);
+    });
   });
+
+  //----------------------------------------------------------------------------
   describe("Month Precision", () => {
     it("works with months", () => {
       parser.feed("January, 2018");
@@ -178,6 +220,8 @@ describe("Date Parsing", () => {
       expect(() => parser.feed("May. 2018")).toThrow();
     });
   });
+
+  //----------------------------------------------------------------------------
   describe("Decade Precision", () => {
     it("works with decades", () => {
       parser.feed("the 1990s");
@@ -204,6 +248,8 @@ describe("Date Parsing", () => {
       expect(results.era).toEqual("BCE");
     });
   });
+
+  //----------------------------------------------------------------------------
   describe("Euro Dates", () => {
     it("works with standard euro date", () => {
       parser.feed("17 October 1980");
@@ -237,6 +283,8 @@ describe("Date Parsing", () => {
       expect(results.day).toEqual(7);
     });
   });
+
+  //----------------------------------------------------------------------------
   describe("Slash Dates", () => {
     it("works with slash dates", () => {
       parser.feed("10/17/1980");
@@ -278,6 +326,7 @@ describe("Date Parsing", () => {
     });
   });
 
+  //----------------------------------------------------------------------------
   describe("ISO Dates", () => {
     it("works with ISO dates", () => {
       parser.feed("1980-10-17");

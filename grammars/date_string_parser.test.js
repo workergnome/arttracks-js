@@ -58,6 +58,17 @@ describe("Date Parsing", () => {
       const results = parser.results[0];
       expect(results.botb).toBe("2019-07-01?");
     });
+    it("handles approximate", () => {
+      parser.feed("circa July 1, 2019");
+      const results = parser.results[0];
+      expect(results.botb).toBe("2019-07-01~");
+    });
+    it("handles approximate and uncertain", () => {
+      parser.feed("circa July 1, 2019?");
+      const results = parser.results[0];
+      expect(results.botb).toBe("2019-07-01%");
+    });
+
     it("handles BCE", () => {
       parser.feed("2000 BCE");
       const results = parser.results[0];
@@ -440,6 +451,11 @@ describe("Date Parsing", () => {
       });
       it("fails with strange capitalization", () => {
         expect(() => parser.feed("aFter July 2020")).toThrow();
+      });
+      it("works with 'until after'", () => {
+        parser.feed("until after July 1, 2019");
+        const results = parser.results[0];
+        expect(results.bote).toBe("2019-07-01");
       });
     });
   });

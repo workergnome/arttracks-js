@@ -1,5 +1,6 @@
 import DateHelpers from "./DateHelpers.js";
 
+//----------------------------------------------------------------------------
 describe("Linked.Art generation", () => {
   let expected = null;
   let url = "http://example.org/timespan";
@@ -21,8 +22,62 @@ describe("Linked.Art generation", () => {
     expected.timespan.begin_of_the_begin = "2000-01-01T00:00:00.000Z";
     expect(results).toMatchObject(expected);
   });
+
+  describe("EDTF Intervals", () => {
+    describe("sometime_within", () => {
+      it("returns a valid 'sometime' interval", () => {
+        let val = { botb: "2000-XX-XX", eote: "2001-XX-XX" };
+        const results = DateHelpers.createLinkedArt(val, url);
+        expected.timespan.sometime_within = "2000-XX-XX/2001-XX-XX";
+        expect(results).toMatchObject(expected);
+      });
+      it("returns a valid 'sometime' interval w/o eote", () => {
+        let val = { botb: "2000-XX-XX" };
+        const results = DateHelpers.createLinkedArt(val, url);
+        expected.timespan.sometime_within = "2000-XX-XX/";
+        expect(results).toMatchObject(expected);
+      });
+      it("returns a valid 'sometime' interval w/o botb", () => {
+        let val = { eote: "2001-XX-XX" };
+        const results = DateHelpers.createLinkedArt(val, url);
+        expected.timespan.sometime_within = "/2001-XX-XX";
+        expect(results).toMatchObject(expected);
+      });
+    });
+    describe("throughout", () => {
+      it("returns a valid 'throughout' interval", () => {
+        let val = { eotb: "2000-XX-XX", bote: "2001-XX-XX" };
+        const results = DateHelpers.createLinkedArt(val, url);
+        expected.timespan.throughout = "2000-XX-XX/2001-XX-XX";
+        expect(results).toMatchObject(expected);
+      });
+      it("returns a valid 'throughout' interval w/o bote", () => {
+        let val = { eotb: "2000-XX-XX" };
+        const results = DateHelpers.createLinkedArt(val, url);
+        expected.timespan.throughout = "2000-XX-XX/";
+        expect(results).toMatchObject(expected);
+      });
+      it("returns a valid 'throughout' interval w/o eotb", () => {
+        let val = { bote: "2001-XX-XX" };
+        const results = DateHelpers.createLinkedArt(val, url);
+        expected.timespan.throughout = "/2001-XX-XX";
+        expect(results).toMatchObject(expected);
+      });
+    });
+  });
+  it("does not include a ID if url is null", () => {
+    let val = { botb: "2000-XX-XX" };
+    url = null;
+
+    const results = DateHelpers.createLinkedArt(val, url);
+    expected.timespan.begin_of_the_begin = "2000-01-01T00:00:00.000Z";
+    delete expected.timespan.id;
+    expect(results).toMatchObject(expected);
+    expect(results.timespan.id).toBeUndefined();
+  });
 });
 
+//----------------------------------------------------------------------------
 describe("ISO generation", () => {
   it("returns null when passed null", () => {
     expect(DateHelpers.createIsoDates(null)).toBeNull();
@@ -45,6 +100,7 @@ describe("ISO generation", () => {
   });
 });
 
+//----------------------------------------------------------------------------
 describe("internal 0-duration intervals", () => {
   it("handles overlapping decades", () => {
     const results = DateHelpers.createIsoDates({ bote: "2000", eotb: "2000" });
@@ -53,6 +109,7 @@ describe("internal 0-duration intervals", () => {
   });
 });
 
+//----------------------------------------------------------------------------
 describe("UTC generation", () => {
   it("returns null when passed null", () => {
     expect(DateHelpers.createUTCDates(null)).toBeNull();

@@ -136,11 +136,21 @@ function constructIsoDate(d) {
     all: d
   }
 }
+
+function addCirca(d) {
+
+  let val = d[1];
+  val.approximate = !!d[0];
+  return val;
+}
 var grammar = {
     Lexer: undefined,
     ParserRules: [
-    {"name": "date", "symbols": ["imprecise_date"], "postprocess": id},
-    {"name": "date", "symbols": ["precise_date"], "postprocess": id},
+    {"name": "date$ebnf$1", "symbols": ["circa"], "postprocess": id},
+    {"name": "date$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "date", "symbols": ["date$ebnf$1", "base_date"], "postprocess": addCirca},
+    {"name": "base_date", "symbols": ["imprecise_date"], "postprocess": id},
+    {"name": "base_date", "symbols": ["precise_date"], "postprocess": id},
     {"name": "imprecise_date", "symbols": ["century"], "postprocess": id},
     {"name": "imprecise_date", "symbols": ["decade"], "postprocess": id},
     {"name": "imprecise_date", "symbols": ["year"], "postprocess": id},
@@ -149,16 +159,14 @@ var grammar = {
     {"name": "precise_date", "symbols": ["euroday"], "postprocess": id},
     {"name": "precise_date", "symbols": ["slashdate"], "postprocess": id},
     {"name": "precise_date", "symbols": ["isodate"], "postprocess": id},
-    {"name": "century$ebnf$1$string$1", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"e"}, {"literal":" "}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "century$ebnf$1", "symbols": ["century$ebnf$1$string$1"], "postprocess": id},
+    {"name": "century$ebnf$1", "symbols": ["the"], "postprocess": id},
     {"name": "century$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "century$ebnf$2", "symbols": ["era"], "postprocess": id},
     {"name": "century$ebnf$2", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "century$ebnf$3", "symbols": ["certainty"], "postprocess": id},
     {"name": "century$ebnf$3", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "century", "symbols": ["century$ebnf$1", "century_number", "__", "century_word", "century$ebnf$2", "century$ebnf$3"], "postprocess": constructCentury},
-    {"name": "decade$ebnf$1$string$1", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"e"}, {"literal":" "}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "decade$ebnf$1", "symbols": ["decade$ebnf$1$string$1"], "postprocess": id},
+    {"name": "decade$ebnf$1", "symbols": ["the"], "postprocess": id},
     {"name": "decade$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "decade$ebnf$2", "symbols": ["era"], "postprocess": id},
     {"name": "decade$ebnf$2", "symbols": [], "postprocess": function(d) {return null;}},
@@ -235,6 +243,13 @@ var grammar = {
     {"name": "ordinal_suffix$string$4", "symbols": [{"literal":"r"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "ordinal_suffix", "symbols": ["ordinal_suffix$string$4"], "postprocess": (d) => null},
     {"name": "era", "symbols": ["_", "era_names"], "postprocess": d => d[1]},
+    {"name": "the$subexpression$1$string$1", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "the$subexpression$1", "symbols": ["the$subexpression$1$string$1"]},
+    {"name": "the$subexpression$1$string$2", "symbols": [{"literal":"T"}, {"literal":"h"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "the$subexpression$1", "symbols": ["the$subexpression$1$string$2"]},
+    {"name": "the", "symbols": ["the$subexpression$1", "__"], "postprocess": null},
+    {"name": "circa$string$1", "symbols": [{"literal":"c"}, {"literal":"i"}, {"literal":"r"}, {"literal":"c"}, {"literal":"a"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "circa", "symbols": ["circa$string$1", "__"], "postprocess": id},
     {"name": "certainty", "symbols": [{"literal":"?"}], "postprocess": id},
     {"name": "comma", "symbols": [{"literal":","}], "postprocess": null},
     {"name": "int$ebnf$1", "symbols": [/[0-9]/]},

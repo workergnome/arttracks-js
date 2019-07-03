@@ -150,6 +150,7 @@ export default class CulturalDates {
     let bce = false;
     let str = null;
     let certain = true;
+    let approximate = false;
 
     // figure out if the date is BCE or CE
     if (dateString.startsWith("-")) {
@@ -163,6 +164,11 @@ export default class CulturalDates {
     if (date.uncertain.value > 0 || date.uncertain === true) {
       certain = false;
       date.uncertain = false;
+    }
+
+    if (date.approximate.value > 0 || date.approximate === true) {
+      approximate = true;
+      date.approximate = false;
     }
 
     // Write out the base date string
@@ -185,6 +191,11 @@ export default class CulturalDates {
     // append certainty to the date string
     if (certain === false) {
       str += "?";
+    }
+
+    // append certainty to the date string
+    if (approximate === true) {
+      str = `circa ${str}`;
     }
 
     return str;

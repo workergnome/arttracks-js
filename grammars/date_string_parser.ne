@@ -8,22 +8,27 @@ function edtf(d) {
   let decade = String(d.decade).padStart(4,"0").replace(/0$/, "")
   let century = String(d.century).padStart(4,"0").replace(/00$/, "")
   let era = d.era == "CE" ? "" : "-"
-  let certainty = d.certainty ? "" : "?"
+
+  let suffix = "";
+  if (d.certainty && d.approximate) { suffix = "~"}
+  else if (!d.certainty && d.approximate) { suffix = "%"}
+  else if (!d.certainty && !d.approximate) { suffix = "?"}
+
 
   if(d.day) {
-    return `${era}${year}-${month}-${day}${certainty}`;
+    return `${era}${year}-${month}-${day}${suffix}`;
   }
   else if  (d.month) {
-    return `${era}${year}-${month}${certainty}`;
+    return `${era}${year}-${month}${suffix}`;
   }
   else if  (d.year) {
-    return `${era}${year}${certainty}`;
+    return `${era}${year}${suffix}`;
   }
   else if  (d.decade) {
-    return `${era}${decade}${certainty}`;
+    return `${era}${decade}${suffix}`;
   }
   else if  (d.century) {
-    return `${era}${century}${certainty}`;
+    return `${era}${century}${suffix}`;
   }
 }
 
@@ -86,7 +91,7 @@ no_date -> ("no date") {% (d) => ({botb: null, eotb: null, bote: null, eote: nul
 
 start_clause -> in_date | between_begin | by_date | after_date | before_date | just_a_start_date
 end_clause   -> until 
-                (between_end | at_least_date | u_before_date | just_an_end_date ) 
+                (between_end | at_least_date | u_before_date | u_after_date | just_an_end_date ) 
                 {% (d) => d[1]%}
 
 # Phrase Parts
@@ -96,12 +101,14 @@ just_an_end_date  -> date               {% (d) => ({bote: edtf(d[0]), eote: edtf
 in_date       -> throughout date        {% (d) => ({eotb: edtf(d[1]), bote: edtf(d[1])}) %}
 by_date       -> by date                {% (d) => ({eotb: edtf(d[1])}) %}
 after_date    -> sometime:? after date  {% (d) => ({botb: edtf(d[2])}) %}
-during_date   -> sometime:? during imprecise_date {% (d) => ({botb: edtf(d[2]), eote: edtf(d[2])}) %}
+u_after_date  -> sometime:? after date  {% (d) => ({bote: edtf(d[2])}) %}
 between_begin -> between date and date  {% (d) => ({botb: edtf(d[1]), eotb: edtf(d[3])}) %}
 between_end   -> between date and date  {% (d) => ({bote: edtf(d[1]), eote: edtf(d[3])}) %}
 u_before_date -> before_phrase date     {% (d) => ({eote: edtf(d[1])}) %}
 before_date   -> before_phrase date     {% (d) => ({eotb: edtf(d[1])}) %}
 at_least_date -> at_least date          {% (d) => ({bote: edtf(d[1])}) %}
+during_date   -> sometime:? during imprecise_date {% (d) => ({botb: edtf(d[2]), eote: edtf(d[2])}) %}
+
 
 # Magic Words
 # ------------------
