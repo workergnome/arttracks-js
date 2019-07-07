@@ -8,7 +8,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "watch": "jest --watch",
+    "watch": "jest --watch --coverage --notify",
     "lint": "eslint --fix --ext .js, .vue src/vue",
     "grammar": "onchange -i 'grammars/*.ne' -- ./bin/update_nearley.sh",
     "railroad": "nearley-railroad grammars/date_string_parser.ne -o railroad.html"

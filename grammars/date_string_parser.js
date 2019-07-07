@@ -39,10 +39,28 @@ function normalizeCentury(century, era) {
     return century*100;
   }
 }
+
+/**
+ * Given a year, return a normalized year.  
+ * 
+ * Currently a no-op, but called out in case we 
+ * need to process them at some point.
+ * 
+ * @param  {number} d The year value
+ * @return {number}   The year value
+ */
 function normalizeYear(d) {
   return d
 }
 
+/**
+ * Given a month value, return a the number of the month (1-12).
+ *
+ * It can accept numbers, month names, or month abbreviations.
+ * 
+ * @param  {(?string|?number)} d The month value
+ * @return {?number}              The numeric value of the month or null
+ */
 function normalizeMonth(d) {
   if (typeof(d) === "number") {
     return d
@@ -76,6 +94,7 @@ function constructCentury(d) {
     certainty: d[5] !== "?"
   };
 }
+
 function constructDecade(d) {
   return {
     decade: Number(d[1]),
@@ -83,6 +102,7 @@ function constructDecade(d) {
     certainty: d[3] !== "?"
   };
 }
+
 function constructYear(d) {
   return {
     year: normalizeYear(d[0]),
@@ -90,6 +110,7 @@ function constructYear(d) {
     certainty: d[2] !== "?"
   };
 }
+
 function constructMonth(d) {
   return {
     month: normalizeMonth(d[0][0]),
@@ -98,6 +119,7 @@ function constructMonth(d) {
     certainty: d[5] !== "?"
   };
 }
+
 function constructDay(d) {
   return {
     day: d[2],
@@ -107,6 +129,7 @@ function constructDay(d) {
     certainty: d[7] !== "?"
   };
 }
+
 function constructEuroDate(d) {
   return {
     day: d[0],
@@ -116,6 +139,7 @@ function constructEuroDate(d) {
     certainty: d[6] !== "?"
   };
 }
+
 function constructSlashDate(d) {
   return {
     day: d[2],
@@ -126,9 +150,10 @@ function constructSlashDate(d) {
     all: d
   };
 }
+
 function constructIsoDate(d) {
   return {
-      day: d[5],
+    day: d[5],
     month: normalizeMonth(d[3]),
     year: normalizeYear(d[1]),
     era: normalizeEra(d[0]),
@@ -137,8 +162,18 @@ function constructIsoDate(d) {
   }
 }
 
-function addCirca(d) {
+function constructDacsDate(d) {
+  return  {
+    day: d[4],
+    month: normalizeMonth(d[2][0]),
+    year: normalizeYear(d[0]),
+    era: "CE",//normalizeEra(d[0]),
+    certainty: d[5] !== "?",
+    all: d
+  }
+}
 
+function addCirca(d) {
   let val = d[1];
   val.approximate = !!d[0];
   return val;
@@ -209,6 +244,27 @@ function processStartDate(d) {
   }
 }
 
+function  formatDashDate(d) {
+  let date1 = {
+    year: d[1],
+    approximate: !!d[0],
+    era: "CE",
+    certainty: true
+  }
+  let date2 = {
+    year: d[3],
+    approximate: !!d[0],
+    era: "CE",
+    certainty: true
+  }
+  return {
+    botb: edtf(date1), 
+    eotb: edtf(date1),
+    bote: edtf(date2), 
+    eote: edtf(date2)
+  }
+}
+
 var grammar = {
     Lexer: undefined,
     ParserRules: [
@@ -225,6 +281,7 @@ var grammar = {
     {"name": "precise_date", "symbols": ["euroday"], "postprocess": id},
     {"name": "precise_date", "symbols": ["slashdate"], "postprocess": id},
     {"name": "precise_date", "symbols": ["isodate"], "postprocess": id},
+    {"name": "precise_date", "symbols": ["dacs_date"], "postprocess": id},
     {"name": "century$ebnf$1", "symbols": ["the"], "postprocess": id},
     {"name": "century$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "century$ebnf$2", "symbols": ["era"], "postprocess": id},
@@ -273,6 +330,9 @@ var grammar = {
     {"name": "isodate$ebnf$2", "symbols": ["certainty"], "postprocess": id},
     {"name": "isodate$ebnf$2", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "isodate", "symbols": ["isodate$ebnf$1", "year_number", {"literal":"-"}, "month_number", {"literal":"-"}, "day_number", "isodate$ebnf$2"], "postprocess": constructIsoDate},
+    {"name": "dacs_date$ebnf$1", "symbols": ["certainty"], "postprocess": id},
+    {"name": "dacs_date$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "dacs_date", "symbols": ["four_digit_year", "__", "month_name", "__", "day_number", "dacs_date$ebnf$1"], "postprocess": constructDacsDate},
     {"name": "century_number$ebnf$1", "symbols": [/[0-9]/], "postprocess": id},
     {"name": "century_number$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "century_number$ebnf$2", "symbols": ["ordinal_suffix"], "postprocess": id},
@@ -280,6 +340,7 @@ var grammar = {
     {"name": "century_number", "symbols": [/[0-9]/, "century_number$ebnf$1", "century_number$ebnf$2"], "postprocess": (d) => Number([d[0],d[1]].join(""))},
     {"name": "decade_number$string$1", "symbols": [{"literal":"0"}, {"literal":"s"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "decade_number", "symbols": ["int", "decade_number$string$1"], "postprocess": (d) => (d[0].v + "0")},
+    {"name": "four_digit_year", "symbols": ["four_int"], "postprocess": (d) => Number(d[0])},
     {"name": "year_number", "symbols": ["int"], "postprocess": (d) => Number(d[0].v)},
     {"name": "month_name", "symbols": ["month_names"]},
     {"name": "month_name$subexpression$1$ebnf$1", "symbols": [{"literal":"."}], "postprocess": id},
@@ -309,13 +370,45 @@ var grammar = {
     {"name": "ordinal_suffix$string$4", "symbols": [{"literal":"r"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "ordinal_suffix", "symbols": ["ordinal_suffix$string$4"], "postprocess": (d) => null},
     {"name": "era", "symbols": ["_", "era_names"], "postprocess": d => d[1]},
+    {"name": "four_int", "symbols": [/[0-9]/, /[0-9]/, /[0-9]/, /[0-9]/], "postprocess": (d) => d.join("")},
     {"name": "the$subexpression$1$string$1", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "the$subexpression$1", "symbols": ["the$subexpression$1$string$1"]},
     {"name": "the$subexpression$1$string$2", "symbols": [{"literal":"T"}, {"literal":"h"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "the$subexpression$1", "symbols": ["the$subexpression$1$string$2"]},
     {"name": "the", "symbols": ["the$subexpression$1", "__"], "postprocess": null},
-    {"name": "circa$string$1", "symbols": [{"literal":"c"}, {"literal":"i"}, {"literal":"r"}, {"literal":"c"}, {"literal":"a"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "circa", "symbols": ["circa$string$1", "__"], "postprocess": id},
+    {"name": "circa$subexpression$1$string$1", "symbols": [{"literal":"c"}, {"literal":"i"}, {"literal":"r"}, {"literal":"c"}, {"literal":"a"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "circa$subexpression$1", "symbols": ["circa$subexpression$1$string$1"]},
+    {"name": "circa$subexpression$1$string$2", "symbols": [{"literal":"C"}, {"literal":"i"}, {"literal":"r"}, {"literal":"c"}, {"literal":"a"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "circa$subexpression$1", "symbols": ["circa$subexpression$1$string$2"]},
+    {"name": "circa$subexpression$1$string$3", "symbols": [{"literal":"c"}, {"literal":"a"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "circa$subexpression$1", "symbols": ["circa$subexpression$1$string$3"]},
+    {"name": "circa$subexpression$1$string$4", "symbols": [{"literal":"C"}, {"literal":"a"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "circa$subexpression$1", "symbols": ["circa$subexpression$1$string$4"]},
+    {"name": "circa$subexpression$1$string$5", "symbols": [{"literal":"C"}, {"literal":"a"}, {"literal":"."}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "circa$subexpression$1", "symbols": ["circa$subexpression$1$string$5"]},
+    {"name": "circa$subexpression$1$string$6", "symbols": [{"literal":"c"}, {"literal":"a"}, {"literal":"."}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "circa$subexpression$1", "symbols": ["circa$subexpression$1$string$6"]},
+    {"name": "circa$subexpression$1$string$7", "symbols": [{"literal":"c"}, {"literal":"."}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "circa$subexpression$1", "symbols": ["circa$subexpression$1$string$7"]},
+    {"name": "circa$subexpression$1$string$8", "symbols": [{"literal":"C"}, {"literal":"."}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "circa$subexpression$1", "symbols": ["circa$subexpression$1$string$8"]},
+    {"name": "circa$subexpression$1$string$9", "symbols": [{"literal":"c"}, {"literal":"c"}, {"literal":"a"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "circa$subexpression$1", "symbols": ["circa$subexpression$1$string$9"]},
+    {"name": "circa$subexpression$1$string$10", "symbols": [{"literal":"C"}, {"literal":"c"}, {"literal":"a"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "circa$subexpression$1", "symbols": ["circa$subexpression$1$string$10"]},
+    {"name": "circa$subexpression$1$string$11", "symbols": [{"literal":"c"}, {"literal":"c"}, {"literal":"a"}, {"literal":"."}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "circa$subexpression$1", "symbols": ["circa$subexpression$1$string$11"]},
+    {"name": "circa$subexpression$1$string$12", "symbols": [{"literal":"C"}, {"literal":"c"}, {"literal":"a"}, {"literal":"."}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "circa$subexpression$1", "symbols": ["circa$subexpression$1$string$12"]},
+    {"name": "circa$subexpression$1$string$13", "symbols": [{"literal":"a"}, {"literal":"p"}, {"literal":"p"}, {"literal":"r"}, {"literal":"o"}, {"literal":"x"}, {"literal":"i"}, {"literal":"m"}, {"literal":"a"}, {"literal":"t"}, {"literal":"e"}, {"literal":"l"}, {"literal":"y"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "circa$subexpression$1", "symbols": ["circa$subexpression$1$string$13"]},
+    {"name": "circa$subexpression$1$string$14", "symbols": [{"literal":"A"}, {"literal":"p"}, {"literal":"p"}, {"literal":"r"}, {"literal":"o"}, {"literal":"x"}, {"literal":"i"}, {"literal":"m"}, {"literal":"a"}, {"literal":"t"}, {"literal":"e"}, {"literal":"l"}, {"literal":"y"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "circa$subexpression$1", "symbols": ["circa$subexpression$1$string$14"]},
+    {"name": "circa$subexpression$1$string$15", "symbols": [{"literal":"a"}, {"literal":"p"}, {"literal":"p"}, {"literal":"r"}, {"literal":"o"}, {"literal":"x"}, {"literal":"."}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "circa$subexpression$1", "symbols": ["circa$subexpression$1$string$15"]},
+    {"name": "circa$subexpression$1$string$16", "symbols": [{"literal":"A"}, {"literal":"p"}, {"literal":"p"}, {"literal":"r"}, {"literal":"o"}, {"literal":"x"}, {"literal":"."}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "circa$subexpression$1", "symbols": ["circa$subexpression$1$string$16"]},
+    {"name": "circa", "symbols": ["circa$subexpression$1", "__"], "postprocess": id},
     {"name": "certainty", "symbols": [{"literal":"?"}], "postprocess": id},
     {"name": "comma", "symbols": [{"literal":","}], "postprocess": null},
     {"name": "int$ebnf$1", "symbols": [/[0-9]/]},
@@ -388,6 +481,7 @@ var grammar = {
     {"name": "date_string", "symbols": ["date_phrase"], "postprocess": id},
     {"name": "date_string", "symbols": ["on_date"], "postprocess": id},
     {"name": "date_string", "symbols": ["no_date"], "postprocess": id},
+    {"name": "date_string", "symbols": ["dashed_date"], "postprocess": id},
     {"name": "date_string", "symbols": ["during_date"], "postprocess": id},
     {"name": "date_phrase$subexpression$1", "symbols": ["start_clause"]},
     {"name": "date_phrase$subexpression$1", "symbols": ["end_clause"]},
@@ -398,7 +492,15 @@ var grammar = {
     {"name": "on_date", "symbols": ["on_date$string$1", "__", "precise_date"], "postprocess": formatOnDate},
     {"name": "no_date$subexpression$1$string$1", "symbols": [{"literal":"n"}, {"literal":"o"}, {"literal":" "}, {"literal":"d"}, {"literal":"a"}, {"literal":"t"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "no_date$subexpression$1", "symbols": ["no_date$subexpression$1$string$1"]},
+    {"name": "no_date$subexpression$1$string$2", "symbols": [{"literal":"u"}, {"literal":"n"}, {"literal":"d"}, {"literal":"a"}, {"literal":"t"}, {"literal":"e"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "no_date$subexpression$1", "symbols": ["no_date$subexpression$1$string$2"]},
     {"name": "no_date", "symbols": ["no_date$subexpression$1"], "postprocess": (d) => ({botb: null, eotb: null, bote: null, eote: null})},
+    {"name": "dashed_date$ebnf$1", "symbols": ["circa"], "postprocess": id},
+    {"name": "dashed_date$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "dashed_date$subexpression$1", "symbols": [{"literal":"-"}]},
+    {"name": "dashed_date$subexpression$1$subexpression$1", "symbols": ["__", {"literal":"-"}, "__"]},
+    {"name": "dashed_date$subexpression$1", "symbols": ["dashed_date$subexpression$1$subexpression$1"]},
+    {"name": "dashed_date", "symbols": ["dashed_date$ebnf$1", "four_digit_year", "dashed_date$subexpression$1", "four_digit_year"], "postprocess": formatDashDate},
     {"name": "start_clause", "symbols": ["in_date"]},
     {"name": "start_clause", "symbols": ["between_begin"]},
     {"name": "start_clause", "symbols": ["by_date"]},

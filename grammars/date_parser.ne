@@ -35,10 +35,28 @@ function normalizeCentury(century, era) {
     return century*100;
   }
 }
+
+/**
+ * Given a year, return a normalized year.  
+ * 
+ * Currently a no-op, but called out in case we 
+ * need to process them at some point.
+ * 
+ * @param  {number} d The year value
+ * @return {number}   The year value
+ */
 function normalizeYear(d) {
   return d
 }
 
+/**
+ * Given a month value, return a the number of the month (1-12).
+ *
+ * It can accept numbers, month names, or month abbreviations.
+ * 
+ * @param  {(?string|?number)} d The month value
+ * @return {?number}              The numeric value of the month or null
+ */
 function normalizeMonth(d) {
   if (typeof(d) === "number") {
     return d
@@ -72,6 +90,7 @@ function constructCentury(d) {
     certainty: d[5] !== "?"
   };
 }
+
 function constructDecade(d) {
   return {
     decade: Number(d[1]),
@@ -79,6 +98,7 @@ function constructDecade(d) {
     certainty: d[3] !== "?"
   };
 }
+
 function constructYear(d) {
   return {
     year: normalizeYear(d[0]),
@@ -86,6 +106,7 @@ function constructYear(d) {
     certainty: d[2] !== "?"
   };
 }
+
 function constructMonth(d) {
   return {
     month: normalizeMonth(d[0][0]),
@@ -94,6 +115,7 @@ function constructMonth(d) {
     certainty: d[5] !== "?"
   };
 }
+
 function constructDay(d) {
   return {
     day: d[2],
@@ -103,6 +125,7 @@ function constructDay(d) {
     certainty: d[7] !== "?"
   };
 }
+
 function constructEuroDate(d) {
   return {
     day: d[0],
@@ -112,6 +135,7 @@ function constructEuroDate(d) {
     certainty: d[6] !== "?"
   };
 }
+
 function constructSlashDate(d) {
   return {
     day: d[2],
@@ -122,9 +146,10 @@ function constructSlashDate(d) {
     all: d
   };
 }
+
 function constructIsoDate(d) {
   return {
-      day: d[5],
+    day: d[5],
     month: normalizeMonth(d[3]),
     year: normalizeYear(d[1]),
     era: normalizeEra(d[0]),
@@ -133,8 +158,18 @@ function constructIsoDate(d) {
   }
 }
 
-function addCirca(d) {
+function constructDacsDate(d) {
+  return  {
+    day: d[4],
+    month: normalizeMonth(d[2][0]),
+    year: normalizeYear(d[0]),
+    era: "CE",//normalizeEra(d[0]),
+    certainty: d[5] !== "?",
+    all: d
+  }
+}
 
+function addCirca(d) {
   let val = d[1];
   val.approximate = !!d[0];
   return val;
@@ -150,19 +185,21 @@ function addCirca(d) {
 
 # Base rule
 # ------------------
-date -> circa:? base_date {% addCirca %}
-base_date      ->  imprecise_date {% id %} 
-                 | precise_date   {% id %}
+date           -> circa:? base_date {% addCirca %}
 
-imprecise_date ->  century        {% id %}
-                 | decade         {% id %}
-                 | year           {% id %}
-                 | month          {% id %}
+base_date      ->  imprecise_date   {% id %} 
+                 | precise_date     {% id %}
+
+imprecise_date ->  century          {% id %}
+                 | decade           {% id %}
+                 | year             {% id %}
+                 | month            {% id %}
      
-precise_date   ->  day            {% id %}
-                 | euroday        {% id %}
-                 | slashdate      {% id %}
-                 | isodate        {% id %}
+precise_date   ->  day              {% id %}
+                 | euroday          {% id %}
+                 | slashdate        {% id %}
+                 | isodate          {% id %}
+                 | dacs_date        {% id %}
     
 # Core date rules
 # ------------------   
@@ -174,25 +211,29 @@ day       -> month_name __ day_with_ordinal comma:? __ year_number era:? certain
 euroday   -> day_with_ordinal __ month_name __ year_number era:? certainty:?         {% constructEuroDate %}
 slashdate -> month_number "/" day_number "/" year_number era:? certainty:?     {% constructSlashDate %}
 isodate   -> "-":? year_number "-" month_number "-" day_number certainty:?     {% constructIsoDate %}
-
+dacs_date -> four_digit_year __ month_name __ day_number certainty:?               {% constructDacsDate %}
 
 # Date parts
 # ------------------
-century_number -> [0-9] [0-9]:? ordinal_suffix:?    {% (d) => Number([d[0],d[1]].join("")) %}
-decade_number  -> int "0s"                          {% (d) => (d[0].v + "0") %}
-year_number    -> int                               {% (d) => Number(d[0].v) %}
-month_name     -> month_names | (month_abbrev ".":? {% id %})
-month_number   -> ([0-9] | "1" [0-2] | "0" [1-9])   {% (d) => Number(d[0].join("")) %} 
-day_number     -> [0-3]:? [0-9]                     {% (d) => Number(d.join("")) %}
-day_with_ordinal -> day_number ordinal_suffix:?     {% id %}
-century_word   -> "Century" | "century"             {% (d) => null %}
-ordinal_suffix -> "th" | "st" | "nd" | "rd"         {% (d) => null %}
-era            -> _ era_names                       {% d => d[1] %}
+century_number   -> [0-9] [0-9]:? ordinal_suffix:?     {% (d) => Number([d[0],d[1]].join("")) %}
+decade_number    -> int "0s"                           {% (d) => (d[0].v + "0") %}
+four_digit_year  -> four_int                           {% (d) => Number(d[0]) %}
+year_number      -> int                                {% (d) => Number(d[0].v) %}
+month_name       -> month_names | (month_abbrev ".":?  {% id %})
+month_number     -> ([0-9] | "1" [0-2] | "0" [1-9])    {% (d) => Number(d[0].join("")) %} 
+day_number       -> [0-3]:? [0-9]                      {% (d) => Number(d.join("")) %}
+day_with_ordinal -> day_number ordinal_suffix:?        {% id %}
+century_word     -> "Century" | "century"              {% (d) => null %}
+ordinal_suffix   -> "th" | "st" | "nd" | "rd"          {% (d) => null %}
+era              -> _ era_names                        {% d => d[1] %}
+
+four_int  -> [0-9] [0-9] [0-9] [0-9]  {% (d) => d.join("") %}
+
 
 # Special characters
 # ------------------
 the       -> ("the" | "The" ) __  {% null %}
-circa     -> "circa" __           {% id %}
+circa     -> ("circa" | "Circa" | "ca" | "Ca" | "Ca." | "ca." | "c." | "C." | "cca" | "Cca" | "cca." | "Cca." | "approximately" | "Approximately" | "approx." | "Approx.") __           {% id %}
 certainty -> "?"                  {% id %}
 comma     -> ","                  {% null %}
 int       -> [0-9]:+              {% (d) => ({v:d[0].join("")}) %}

@@ -33,3 +33,7 @@ it("returns an error message for bad dates", () => {
   const results = parse_date("spaghetti");
   expect(results.error).not.toBeNull();
 });
+it("returns null for incomplete phrases", () => {
+  const results = parse_date("Janua");
+  expect(results).toBeNull();
+});

@@ -7,6 +7,26 @@ describe("Date Parsing", () => {
   beforeEach(() => {
     parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
   });
+
+  describe("DACS dates", () => {
+    it("handles DACS ranges", () => {
+      parser.feed("2018-2019");
+      const results = parser.results[0];
+      expect(results.botb).toBe("2018");
+      expect(results.eotb).toBe("2018");
+      expect(results.bote).toBe("2019");
+      expect(results.eote).toBe("2019");
+    });
+    it("handles approximate DACS ranges", () => {
+      parser.feed("approximately 2018-2019");
+      const results = parser.results[0];
+      expect(results.botb).toBe("2018~");
+      expect(results.eotb).toBe("2018~");
+      expect(results.bote).toBe("2019~");
+      expect(results.eote).toBe("2019~");
+    });
+  });
+
   describe("EDTF Support", () => {
     it("handles day precision", () => {
       parser.feed("July 1, 2019");
@@ -77,6 +97,26 @@ describe("Date Parsing", () => {
   });
 
   describe("Date Phrases", () => {
+    describe.each([
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ])("Basic month test with %s", month => {
+      it(`Parses ${month} correctly`, () => {
+        parser.feed(`${month}, 2018`);
+        expect(parser.results[0]).not.toBeNull();
+      });
+    });
+
     describe("Bare Dates", () => {
       it("works with a bare year", () => {
         parser.feed("2019");

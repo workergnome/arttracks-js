@@ -65,6 +65,27 @@ function processStartDate(d) {
   }
 }
 
+function  formatDashDate(d) {
+  let date1 = {
+    year: d[1],
+    approximate: !!d[0],
+    era: "CE",
+    certainty: true
+  }
+  let date2 = {
+    year: d[3],
+    approximate: !!d[0],
+    era: "CE",
+    certainty: true
+  }
+  return {
+    botb: edtf(date1), 
+    eotb: edtf(date1),
+    bote: edtf(date2), 
+    eote: edtf(date2)
+  }
+}
+
 %}
 
 
@@ -73,6 +94,7 @@ function processStartDate(d) {
 date_string -> date_phrase {% id %}
                | on_date {% id %} 
                | no_date {% id %}
+               | dashed_date {% id %}
                | during_date {% id %}
 
 # Core date type
@@ -84,7 +106,9 @@ date_phrase -> (   start_clause
                ) 
                {% formatDatePhrase %}
 on_date -> "on" __ precise_date {% formatOnDate %}
-no_date -> ("no date") {% (d) => ({botb: null, eotb: null, bote: null, eote: null}) %}
+no_date -> ("no date" | "undated") {% (d) => ({botb: null, eotb: null, bote: null, eote: null}) %}
+dashed_date -> circa:? four_digit_year ( "-" | (__ "-" __)) four_digit_year  {% formatDashDate %}
+
 
 # Phrase Clauses
 # ------------------  

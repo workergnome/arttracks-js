@@ -20,18 +20,43 @@ describe("Date Parsing", () => {
       const results = parser.results[0];
       expect(results.approximate).toEqual(true);
     });
+
+    for (let prefix of [
+      "circa",
+      "Circa",
+      "ca",
+      "Ca",
+      "Ca.",
+      "ca.",
+      "c.",
+      "C.",
+      "cca",
+      "cca.",
+      "Cca",
+      "Cca.",
+      "approximately",
+      "Approximately",
+      "approx.",
+      "Approx."
+    ]) {
+      it(`works with '${prefix}'`, () => {
+        parser.feed(`${prefix} 1990`);
+        const results = parser.results[0];
+        expect(results.approximate).toEqual(true);
+      });
+    }
     it("works with 'years'", () => {
       parser.feed("circa  1990");
       const results = parser.results[0];
       expect(results.approximate).toEqual(true);
     });
-    it("works with 'years'", () => {
-      parser.feed("circa the 17th century");
+    it("works with 'centuries'", () => {
+      parser.feed("c. the 17th century");
       const results = parser.results[0];
       expect(results.approximate).toEqual(true);
     });
     it("works with uncertainty", () => {
-      parser.feed("circa December 25th, 1990?");
+      parser.feed("ca December 25th, 1990?");
       const results = parser.results[0];
       expect(results.approximate).toEqual(true);
       expect(results.certainty).toEqual(false);
@@ -165,10 +190,35 @@ describe("Date Parsing", () => {
       const results = parser.results[0];
       expect(results.century).toBe(2000);
     });
+    it("handles capitalized Century", () => {
+      parser.feed("the 21st Century");
+      const results = parser.results[0];
+      expect(results.century).toBe(2000);
+    });
   });
 
   //----------------------------------------------------------------------------
   describe("Month Precision", () => {
+    describe.each([
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ])("Basic month test with %s", month => {
+      it(`Parses ${month} correctly`, () => {
+        parser.feed(`${month}, 2018`);
+        expect(parser.results[0]).not.toBeNull();
+      });
+    });
+
     it("works with months", () => {
       parser.feed("January, 2018");
       const results = parser.results[0];
@@ -218,6 +268,11 @@ describe("Date Parsing", () => {
     });
     it("does not work with 'May.'. ", () => {
       expect(() => parser.feed("May. 2018")).toThrow();
+    });
+    it("works with a misspelling of Febuary. ", () => {
+      parser.feed("Febuary 2018");
+      const results = parser.results[0];
+      expect(results.month).toEqual(2);
     });
   });
 
@@ -371,6 +426,29 @@ describe("Date Parsing", () => {
     });
     it("does not work with invalid months that start with 1", () => {
       expect(() => parser.feed("1980-13-17")).toThrow();
+    });
+  });
+
+  //----------------------------------------------------------------------------
+  describe.each([
+    ["1st", 1],
+    ["2nd", 2],
+    ["3rd", 3],
+    ["4th", 4],
+    ["5th", 5],
+    ["10th", 10],
+    ["11th", 11],
+    ["13th", 13],
+    ["14th", 14],
+    ["20th", 20],
+    ["21st", 21],
+    ["22nd", 22],
+    ["23rd", 23],
+    ["24th", 24]
+  ])("Basic ordinalization test with %s", (numstring, expected) => {
+    it(`Parses ${numstring} correctly`, () => {
+      parser.feed(`January ${numstring}, 2018`);
+      expect(parser.results[0].day).toBe(expected);
     });
   });
 });
