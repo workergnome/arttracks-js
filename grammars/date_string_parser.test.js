@@ -25,6 +25,30 @@ describe("Date Parsing", () => {
       expect(results.bote).toBe("2019~");
       expect(results.eote).toBe("2019~");
     });
+    it("Handles DACS month ranges", () => {
+      parser.feed("2018 March-April");
+      const results = parser.results[0];
+      expect(results.botb).toBe("2018-03");
+      expect(results.eotb).toBe("2018-03");
+      expect(results.bote).toBe("2018-04");
+      expect(results.eote).toBe("2018-04");
+    });
+    it("Handles circa DACS month ranges", () => {
+      parser.feed("circa 2018 March-April");
+      const results = parser.results[0];
+      expect(results.botb).toBe("2018-03~");
+      expect(results.eotb).toBe("2018-03~");
+      expect(results.bote).toBe("2018-04~");
+      expect(results.eote).toBe("2018-04~");
+    });
+    it("Handles circa DACS month ranges w/abbrev", () => {
+      parser.feed("2018 Feb-Dec");
+      const results = parser.results[0];
+      expect(results.botb).toBe("2018-02");
+      expect(results.eotb).toBe("2018-02");
+      expect(results.bote).toBe("2018-12");
+      expect(results.eote).toBe("2018-12");
+    });
   });
 
   describe("EDTF Support", () => {

@@ -15,16 +15,16 @@ const DACS_EXAMPLES = [
   "1934-1985",
   "1945-1960",
   "1950-1955",
+  "circa 1870-1879",
   "before 1867",
   "after 1867 January 5",
-  "approximately 1952-1978"
-  // "1975 March-August",
+  "approximately 1952-1978",
+  "1975 March-August"
   // "1801,1929",
   // "1975, 2002",
   // "1785-1960, bulk 1916-1958",
   // "1942-1998, predominant 1975-1991",
   // "1827, 1952-1978",
-  // "circa 1870-1879",
   // "probably 1867",
   // "1892 or 1893",
 ];

@@ -86,6 +86,29 @@ function  formatDashDate(d) {
   }
 }
 
+function formatMonthDash(d) {
+   let date1 = {
+    year: d[1],
+    month: normalizeMonth(d[3][0]),
+    approximate: !!d[0],
+    era: "CE",
+    certainty: true
+  }
+  let date2 = {
+    year: d[1],
+    approximate: !!d[0],
+    month: normalizeMonth(d[5][0]),
+    era: "CE",
+    certainty: true
+  }
+  return {
+    botb: edtf(date1), 
+    eotb: edtf(date1),
+    bote: edtf(date2), 
+    eote: edtf(date2)
+  } 
+}
+
 %}
 
 
@@ -96,6 +119,7 @@ date_string -> date_phrase {% id %}
                | no_date {% id %}
                | dashed_date {% id %}
                | during_date {% id %}
+               | month_dash {% id %}
 
 # Core date type
 # ------------------  
@@ -108,7 +132,7 @@ date_phrase -> (   start_clause
 on_date -> "on" __ precise_date {% formatOnDate %}
 no_date -> ("no date" | "undated") {% (d) => ({botb: null, eotb: null, bote: null, eote: null}) %}
 dashed_date -> circa:? four_digit_year ( "-" | (__ "-" __)) four_digit_year  {% formatDashDate %}
-
+month_dash  -> circa:? four_digit_year __ month_name "-" month_name     {% formatMonthDash %}
 
 # Phrase Clauses
 # ------------------  

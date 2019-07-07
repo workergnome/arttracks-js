@@ -265,6 +265,29 @@ function  formatDashDate(d) {
   }
 }
 
+function formatMonthDash(d) {
+   let date1 = {
+    year: d[1],
+    month: normalizeMonth(d[3][0]),
+    approximate: !!d[0],
+    era: "CE",
+    certainty: true
+  }
+  let date2 = {
+    year: d[1],
+    approximate: !!d[0],
+    month: normalizeMonth(d[5][0]),
+    era: "CE",
+    certainty: true
+  }
+  return {
+    botb: edtf(date1), 
+    eotb: edtf(date1),
+    bote: edtf(date2), 
+    eote: edtf(date2)
+  } 
+}
+
 var grammar = {
     Lexer: undefined,
     ParserRules: [
@@ -483,6 +506,7 @@ var grammar = {
     {"name": "date_string", "symbols": ["no_date"], "postprocess": id},
     {"name": "date_string", "symbols": ["dashed_date"], "postprocess": id},
     {"name": "date_string", "symbols": ["during_date"], "postprocess": id},
+    {"name": "date_string", "symbols": ["month_dash"], "postprocess": id},
     {"name": "date_phrase$subexpression$1", "symbols": ["start_clause"]},
     {"name": "date_phrase$subexpression$1", "symbols": ["end_clause"]},
     {"name": "date_phrase$subexpression$1$subexpression$1", "symbols": ["start_clause", "end_clause"], "postprocess": (d) => [d[0][0],d[1][0]]},
@@ -501,6 +525,9 @@ var grammar = {
     {"name": "dashed_date$subexpression$1$subexpression$1", "symbols": ["__", {"literal":"-"}, "__"]},
     {"name": "dashed_date$subexpression$1", "symbols": ["dashed_date$subexpression$1$subexpression$1"]},
     {"name": "dashed_date", "symbols": ["dashed_date$ebnf$1", "four_digit_year", "dashed_date$subexpression$1", "four_digit_year"], "postprocess": formatDashDate},
+    {"name": "month_dash$ebnf$1", "symbols": ["circa"], "postprocess": id},
+    {"name": "month_dash$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "month_dash", "symbols": ["month_dash$ebnf$1", "four_digit_year", "__", "month_name", {"literal":"-"}, "month_name"], "postprocess": formatMonthDash},
     {"name": "start_clause", "symbols": ["in_date"]},
     {"name": "start_clause", "symbols": ["between_begin"]},
     {"name": "start_clause", "symbols": ["by_date"]},
