@@ -1,5 +1,10 @@
 import { parse_date } from "./index.js";
 
+// This is a list of DACS formats from the DACS standard.
+// Currently, we handle all forms that are NOT multiple dates.  That may come
+// later if needed--EDTF supports it, but I worry about the parser complexity
+// right now.
+
 const DACS_EXAMPLES = [
   "undated",
   "1968",
