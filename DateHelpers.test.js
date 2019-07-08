@@ -13,6 +13,15 @@ describe("Linked.Art generation", () => {
     };
   });
 
+  describe("Identifier Generation", () => {
+    it("does includes an ID if a URL is passed", () => {
+      expect(DateHelpers.generateIdentifier("test", "#url").id).toEqual("#url");
+    });
+    it("does not include an ID if no URL is passed", () => {
+      expect(DateHelpers.generateIdentifier("test").id).toBeUndefined();
+    });
+  });
+
   it("returns null when passed null", () => {
     expect(DateHelpers.createLinkedArt(null)).toBeNull();
   });

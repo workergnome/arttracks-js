@@ -1,14 +1,4 @@
 import CulturalDates from "./CulturalDates.js";
-import edtf from "edtf";
-
-describe("edtf tests", () => {
-  it("parses masked decades", () => {
-    expect(edtf("199?").edtf).toEqual("199?");
-  });
-  it("parses masked centuries", () => {
-    expect(edtf("19?").edtf).toEqual("19?");
-  });
-});
 
 describe("CulturalDates.js", () => {
   let cd = null;
@@ -96,15 +86,7 @@ describe("CulturalDates.js", () => {
       };
       expect(cd.parse(data)).toContain("February 14, 1980 BCE");
     });
-    it("handles basic dates", () => {
-      const data = {
-        botb: "1980-02-14",
-        eotb: "1980-02-14",
-        bote: null,
-        eote: null
-      };
-      expect(cd.parse(data)).toContain("February 14, 1980");
-    });
+
     it("handles uncertain basic dates", () => {
       const data = {
         botb: "1980-02-14?",
@@ -143,7 +125,8 @@ describe("CulturalDates.js", () => {
       };
       expect(cd.parse(data)).toContain("February 14, 1980 BCE?");
     });
-
+  });
+  describe("Date Phrases", () => {
     it("handles 'throughout 1980'", () => {
       const data = {
         botb: null,
@@ -224,7 +207,8 @@ describe("CulturalDates.js", () => {
       };
       expect(cd.parse(data)).toContain("1970 BCE");
     });
-
+  });
+  describe("single-value dates", () => {
     it("handles botb dates", () => {
       const data = {
         botb: "1980-02-14",
@@ -261,6 +245,8 @@ describe("CulturalDates.js", () => {
       };
       expect(cd.parse(data)).toContain("until no later than February 14, 1980");
     });
+  });
+  describe("double-value dates", () => {
     it("handles botb & eotb dates", () => {
       const data = {
         botb: "1980-02-14",
@@ -283,6 +269,8 @@ describe("CulturalDates.js", () => {
         "until sometime between February 14, 1980 and 1990"
       );
     });
+  });
+  describe("levels of precision", () => {
     it("handles decades", () => {
       const data = {
         botb: "198",

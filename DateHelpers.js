@@ -1,29 +1,7 @@
 import edtf from "edtf";
 import CulturalDates from "./CulturalDates.js";
-class DateHelpers {
-  static _botb(obj) {
-    const d = edtf(obj.botb).min;
-    return new Date(d);
-  }
-  static _eotb(obj) {
-    let d = edtf(obj.eotb).max;
-    if (obj.bote && obj.eotb == obj.bote) {
-      d = edtf(obj.eotb).min;
-    }
-    return new Date(d);
-  }
-  static _bote(obj) {
-    let d = edtf(obj.bote).min;
-    if (obj.eotb && obj.eotb == obj.bote) {
-      d = edtf(obj.bote).max;
-    }
-    return new Date(d);
-  }
-  static _eote(obj) {
-    const d = edtf(obj.eote).max;
-    return new Date(d);
-  }
 
+class DateHelpers {
   static generateString(inputObject) {
     let cd = new CulturalDates();
     return cd.parse(inputObject);
@@ -52,7 +30,7 @@ class DateHelpers {
         }
     `);
     if (!url) {
-      delete val.url;
+      delete val.id;
     }
     return val;
   }
@@ -124,6 +102,54 @@ class DateHelpers {
       isoDates.eote = this._eote(inputObject).toISOString();
     }
     return isoDates;
+  }
+
+  /**
+   * Helper method for computing Begin of the Begin
+   * @private
+   * @param  {Object} obj   A date object
+   * @return {Date}         The BOTB date
+   */
+  static _botb(obj) {
+    const d = edtf(obj.botb).min;
+    return new Date(d);
+  }
+  /**
+   * Helper method for computing the End of the Beginning
+   * @private
+   * @param  {Object} obj   A date object
+   * @return {Date}         The EOTB date
+   */
+  static _eotb(obj) {
+    let d = edtf(obj.eotb).max;
+    if (obj.bote && obj.eotb == obj.bote) {
+      d = edtf(obj.eotb).min;
+    }
+    return new Date(d);
+  }
+  /**
+   * Helper method for computing Begin of the End
+   * @private
+   * @param  {Object} obj   A date object
+   * @return {Date}         The BOTE date
+   */
+  static _bote(obj) {
+    let d = edtf(obj.bote).min;
+    if (obj.eotb && obj.eotb == obj.bote) {
+      d = edtf(obj.bote).max;
+    }
+    return new Date(d);
+  }
+
+  /**
+   * Helper method for computing End of the End
+   * @private
+   * @param  {Object} obj   A date object
+   * @return {Date}         The EOTE date
+   */
+  static _eote(obj) {
+    const d = edtf(obj.eote).max;
+    return new Date(d);
   }
 }
 

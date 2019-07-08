@@ -157,6 +157,12 @@ describe("Date Parsing", () => {
       expect(results.era).toEqual("CE");
       expect(results.certainty).toEqual(false);
     });
+    it.skip("does not work with 5 digit years", () => {
+      expect(() => {
+        let results = parser.feed("20000");
+        console.log(results);
+      }).toThrow();
+    });
   });
 
   //----------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-import { parse_date } from "./index.js";
+import { parse_date } from "../index.js";
 
 // This is a list of DACS formats from the DACS standard.
 // Currently, we handle all forms that are NOT multiple dates.  That may come
