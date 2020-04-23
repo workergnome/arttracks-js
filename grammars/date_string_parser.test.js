@@ -17,6 +17,24 @@ describe("Date Parsing", () => {
       expect(results.bote).toBe("2019");
       expect(results.eote).toBe("2019");
     });
+
+    it("handles DACS ranges w/Months", () => {
+      parser.feed("January 2018-March 2019");
+      const results = parser.results[0];
+      expect(results.botb).toBe("2018-01");
+      expect(results.eotb).toBe("2018-01");
+      expect(results.bote).toBe("2019-03");
+      expect(results.eote).toBe("2019-03");
+    });
+    it("handles DACS ranges w/Months and spaces", () => {
+      parser.feed("January 2018 - March 2019");
+      const results = parser.results[0];
+      expect(results.botb).toBe("2018-01");
+      expect(results.eotb).toBe("2018-01");
+      expect(results.bote).toBe("2019-03");
+      expect(results.eote).toBe("2019-03");
+    });
+
     it("handles approximate DACS ranges", () => {
       parser.feed("approximately 2018-2019");
       const results = parser.results[0];
@@ -41,13 +59,21 @@ describe("Date Parsing", () => {
       expect(results.bote).toBe("2018-04~");
       expect(results.eote).toBe("2018-04~");
     });
-    it("Handles circa DACS month ranges w/abbrev", () => {
+    it("Handles DACS ranges w/abbrev months", () => {
       parser.feed("2018 Feb-Dec");
       const results = parser.results[0];
       expect(results.botb).toBe("2018-02");
       expect(results.eotb).toBe("2018-02");
       expect(results.bote).toBe("2018-12");
       expect(results.eote).toBe("2018-12");
+    });
+    it("Handles DACS day-specific ranges", () => {
+      parser.feed("1936 January 20-February 8");
+      const results = parser.results[0];
+      expect(results.botb).toBe("1936-01-20");
+      expect(results.eotb).toBe("1936-01-20");
+      expect(results.bote).toBe("1936-02-08");
+      expect(results.eote).toBe("1936-02-08");
     });
   });
 
@@ -556,6 +582,14 @@ describe("Date Parsing", () => {
     });
     it("works with explicit 'no date' string", () => {
       parser.feed("no date");
+      const results = parser.results[0];
+      expect(results.botb).toBeNull();
+      expect(results.bote).toBeNull();
+      expect(results.eotb).toBeNull();
+      expect(results.eote).toBeNull();
+    });
+    it("works with explicit 'undated' string", () => {
+      parser.feed("undated");
       const results = parser.results[0];
       expect(results.botb).toBeNull();
       expect(results.bote).toBeNull();

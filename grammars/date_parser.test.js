@@ -115,6 +115,38 @@ describe("Date Parsing", () => {
       expect(results.era).toEqual("CE");
       expect(results.certainty).toEqual(true);
     });
+    it("three digit years work", () => {
+      parser.feed("990");
+      const results = parser.results[0];
+      expect(results.year).toEqual(990);
+      expect(results.era).toEqual("CE");
+      expect(results.certainty).toEqual(true);
+    });
+    it("high two digit years work", () => {
+      parser.feed("90");
+      const results = parser.results[0];
+      expect(results.year).toEqual(90);
+      expect(results.era).toEqual("CE");
+      expect(results.certainty).toEqual(true);
+    });
+    it("mid two digit years work", () => {
+      parser.feed("35");
+      const results = parser.results[0];
+      expect(results.year).toEqual(35);
+      expect(results.era).toEqual("CE");
+      expect(results.certainty).toEqual(true);
+    });
+    it("low two digit years work with era", () => {
+      parser.feed("30 CE");
+      const results = parser.results[0];
+      expect(results.year).toEqual(30);
+      expect(results.era).toEqual("CE");
+      expect(results.certainty).toEqual(true);
+    });
+    it("low two digit years do not work w/o era", () => {
+      parser.feed("30");
+      expect(parser.results[0]).toBeUndefined();
+    });
     it("works with uncertain years", () => {
       parser.feed("1990?");
       const results = parser.results[0];
@@ -160,7 +192,6 @@ describe("Date Parsing", () => {
     it.skip("does not work with 5 digit years", () => {
       expect(() => {
         let results = parser.feed("20000");
-        console.log(results);
       }).toThrow();
     });
   });
@@ -432,6 +463,27 @@ describe("Date Parsing", () => {
     });
     it("does not work with invalid months that start with 1", () => {
       expect(() => parser.feed("1980-13-17")).toThrow();
+    });
+  });
+
+  //----------------------------------------------------------------------------
+  describe("DACS dates", () => {
+    it("works w month precision", () => {
+      parser.feed("1863 October");
+      const results = parser.results[0];
+      expect(results.month).toEqual(10);
+      expect(results.year).toEqual(1863);
+      expect(results.day).toBeUndefined();
+    });
+    it("works w day precision", () => {
+      parser.feed("1863 October 17");
+      const results = parser.results[0];
+      expect(results.month).toEqual(10);
+      expect(results.year).toEqual(1863);
+      expect(results.day).toEqual(17);
+    });
+    it("works fails w/ incorrect year precision", () => {
+      expect(() => parser.feed("999 October 17")).toThrow();
     });
   });
 

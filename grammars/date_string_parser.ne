@@ -66,24 +66,13 @@ function processStartDate(d) {
 }
 
 function  formatDashDate(d) {
-  let date1 = {
-    year: d[1],
-    approximate: !!d[0],
-    era: "CE",
-    certainty: true
-  }
-  let date2 = {
-    year: d[3],
-    approximate: !!d[0],
-    era: "CE",
-    certainty: true
-  }
+  d[2].approximate = d[0].approximate
   return {
-    botb: edtf(date1), 
-    eotb: edtf(date1),
-    bote: edtf(date2), 
-    eote: edtf(date2)
-  }
+    botb: edtf(d[0]), 
+    eotb: edtf(d[0]),
+    bote: edtf(d[2]), 
+    eote: edtf(d[2])
+  } 
 }
 
 function formatMonthDash(d) {
@@ -131,7 +120,7 @@ date_phrase -> (   start_clause
                {% formatDatePhrase %}
 on_date -> "on" __ precise_date {% formatOnDate %}
 no_date -> ("no date" | "undated") {% (d) => ({botb: null, eotb: null, bote: null, eote: null}) %}
-dashed_date -> circa:? four_digit_year ( "-" | (__ "-" __)) four_digit_year  {% formatDashDate %}
+dashed_date -> date ( "-" | (__ "-" __)) date  {% formatDashDate %}
 month_dash  -> circa:? four_digit_year __ month_name "-" month_name     {% formatMonthDash %}
 
 # Phrase Clauses

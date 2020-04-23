@@ -46,6 +46,9 @@ function normalizeCentury(century, era) {
  * @return {number}   The year value
  */
 function normalizeYear(d) {
+  if (typeof d != "number") {
+    throw `Year is not a number: "${d}" is a ${typeof d}`
+  }
   return d
 }
 
@@ -108,11 +111,12 @@ function constructYear(d) {
 }
 
 function constructMonth(d) {
+  console.log(d);
   return {
     month: normalizeMonth(d[0][0]),
-    year: normalizeYear(d[3]),
-    era: normalizeEra(d[4]),
-    certainty: d[5] !== "?"
+    year: normalizeYear(d[3][0][0]),
+    era: normalizeEra(d[3][0][1]),
+    certainty: d[4] !== "?"
   };
 }
 
@@ -159,14 +163,18 @@ function constructIsoDate(d) {
 }
 
 function constructDacsDate(d) {
-  return  {
-    day: d[4],
+  //console.log(d)
+  let val = {
     month: normalizeMonth(d[2][0]),
     year: normalizeYear(d[0]),
     era: "CE",//normalizeEra(d[0]),
     certainty: d[5] !== "?",
     all: d
   }
+  if (d[3] && d[3][1]) {
+    val.day = d[3][1];
+  }
+  return val;
 }
 
 function addCirca(d) {
@@ -174,6 +182,13 @@ function addCirca(d) {
   val.approximate = !!d[0];
   return val;
 }
+
+function constructEraYear(d) {
+  console.log("HHHH")
+  console.log(d);
+  return d[0];
+}
+
 %}
 
 
@@ -206,19 +221,18 @@ precise_date   ->  day              {% id %}
 century   -> the:? century_number __ century_word  era:? certainty:?           {% constructCentury %}
 decade    -> the:? decade_number era:? certainty:?                             {% constructDecade %}
 year      -> year_number era:? certainty:?                                     {% constructYear %}
-month     -> month_name comma:? __ year_number era:? certainty:?               {% constructMonth %}
+month     -> month_name comma:? __ year_era certainty:?                        {% constructMonth %}
 day       -> month_name __ day_with_ordinal comma:? __ year_number era:? certainty:? {% constructDay %}
 euroday   -> day_with_ordinal __ month_name __ year_number era:? certainty:?         {% constructEuroDate %}
 slashdate -> month_number "/" day_number "/" year_number era:? certainty:?     {% constructSlashDate %}
 isodate   -> "-":? year_number "-" month_number "-" day_number certainty:?     {% constructIsoDate %}
-dacs_date -> four_digit_year __ month_name __ day_number certainty:?               {% constructDacsDate %}
+dacs_date -> four_digit_year __ month_name (__ day_number):? certainty:?               {% constructDacsDate %}
 
 # Date parts
 # ------------------
 century_number   -> [0-9] [0-9]:? ordinal_suffix:?     {% (d) => Number([d[0],d[1]].join("")) %}
 decade_number    -> int "0s"                           {% (d) => (d[0].v + "0") %}
-four_digit_year  -> four_int                           {% (d) => Number(d[0]) %}
-year_number      -> int                                {% (d) => Number(d[0].v) %}
+four_digit_year  -> four_int                           {% id %}
 month_name       -> month_names | (month_abbrev ".":?  {% id %})
 month_number     -> ([0-9] | "1" [0-2] | "0" [1-9])    {% (d) => Number(d[0].join("")) %} 
 day_number       -> [0-3]:? [0-9]                      {% (d) => Number(d.join("")) %}
@@ -227,8 +241,16 @@ century_word     -> "Century" | "century"              {% (d) => null %}
 ordinal_suffix   -> "th" | "st" | "nd" | "rd"          {% (d) => null %}
 era              -> _ era_names                        {% d => d[1] %}
 
-four_int  -> [0-9] [0-9] [0-9] [0-9]  {% (d) => d.join("") %}
 
+year_era        -> (year_number era:?) | (low_year_number era)  {% (d) => {console.log(d); return d; }%}
+low_year_number  -> (two_int | one_int) {% (d) => Number(d[0][0]) %}
+year_number      -> (four_int | three_int | high_two_int) {% (d) => Number(d[0][0]) %}
+four_int      -> [0-9] [0-9] [0-9] [0-9]        {% (d) => Number(d.join("")) %}
+three_int     -> [0-9] [0-9] [0-9]              {% (d) => Number(d.join("")) %}
+high_two_int  -> (("3" [2-9]) | ([4-9] [0-9]))  {% (d) =>  Number(d[0][0].join("")) %}
+low_two_int   -> (([0-2] [0-9]) | ( "30" | "31")) {% (d) =>  Number(d[0][0].join("")) %}
+two_int    -> [0-9] [0-9] {% (d) => d.join("") %}
+one_int    -> [0-9]
 
 # Special characters
 # ------------------

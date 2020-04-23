@@ -50,6 +50,9 @@ function normalizeCentury(century, era) {
  * @return {number}   The year value
  */
 function normalizeYear(d) {
+  if (typeof d != "number") {
+    throw `Year is not a number: "${d}" is a ${typeof d}`
+  }
   return d
 }
 
@@ -112,11 +115,12 @@ function constructYear(d) {
 }
 
 function constructMonth(d) {
+  console.log(d);
   return {
     month: normalizeMonth(d[0][0]),
-    year: normalizeYear(d[3]),
-    era: normalizeEra(d[4]),
-    certainty: d[5] !== "?"
+    year: normalizeYear(d[3][0][0]),
+    era: normalizeEra(d[3][0][1]),
+    certainty: d[4] !== "?"
   };
 }
 
@@ -163,14 +167,18 @@ function constructIsoDate(d) {
 }
 
 function constructDacsDate(d) {
-  return  {
-    day: d[4],
+  //console.log(d)
+  let val = {
     month: normalizeMonth(d[2][0]),
     year: normalizeYear(d[0]),
     era: "CE",//normalizeEra(d[0]),
     certainty: d[5] !== "?",
     all: d
   }
+  if (d[3] && d[3][1]) {
+    val.day = d[3][1];
+  }
+  return val;
 }
 
 function addCirca(d) {
@@ -178,6 +186,13 @@ function addCirca(d) {
   val.approximate = !!d[0];
   return val;
 }
+
+function constructEraYear(d) {
+  console.log("HHHH")
+  console.log(d);
+  return d[0];
+}
+
 var grammar = {
     Lexer: undefined,
     ParserRules: [
@@ -216,11 +231,9 @@ var grammar = {
     {"name": "year", "symbols": ["year_number", "year$ebnf$1", "year$ebnf$2"], "postprocess": constructYear},
     {"name": "month$ebnf$1", "symbols": ["comma"], "postprocess": id},
     {"name": "month$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
-    {"name": "month$ebnf$2", "symbols": ["era"], "postprocess": id},
+    {"name": "month$ebnf$2", "symbols": ["certainty"], "postprocess": id},
     {"name": "month$ebnf$2", "symbols": [], "postprocess": function(d) {return null;}},
-    {"name": "month$ebnf$3", "symbols": ["certainty"], "postprocess": id},
-    {"name": "month$ebnf$3", "symbols": [], "postprocess": function(d) {return null;}},
-    {"name": "month", "symbols": ["month_name", "month$ebnf$1", "__", "year_number", "month$ebnf$2", "month$ebnf$3"], "postprocess": constructMonth},
+    {"name": "month", "symbols": ["month_name", "month$ebnf$1", "__", "year_era", "month$ebnf$2"], "postprocess": constructMonth},
     {"name": "day$ebnf$1", "symbols": ["comma"], "postprocess": id},
     {"name": "day$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "day$ebnf$2", "symbols": ["era"], "postprocess": id},
@@ -243,9 +256,12 @@ var grammar = {
     {"name": "isodate$ebnf$2", "symbols": ["certainty"], "postprocess": id},
     {"name": "isodate$ebnf$2", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "isodate", "symbols": ["isodate$ebnf$1", "year_number", {"literal":"-"}, "month_number", {"literal":"-"}, "day_number", "isodate$ebnf$2"], "postprocess": constructIsoDate},
-    {"name": "dacs_date$ebnf$1", "symbols": ["certainty"], "postprocess": id},
+    {"name": "dacs_date$ebnf$1$subexpression$1", "symbols": ["__", "day_number"]},
+    {"name": "dacs_date$ebnf$1", "symbols": ["dacs_date$ebnf$1$subexpression$1"], "postprocess": id},
     {"name": "dacs_date$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
-    {"name": "dacs_date", "symbols": ["four_digit_year", "__", "month_name", "__", "day_number", "dacs_date$ebnf$1"], "postprocess": constructDacsDate},
+    {"name": "dacs_date$ebnf$2", "symbols": ["certainty"], "postprocess": id},
+    {"name": "dacs_date$ebnf$2", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "dacs_date", "symbols": ["four_digit_year", "__", "month_name", "dacs_date$ebnf$1", "dacs_date$ebnf$2"], "postprocess": constructDacsDate},
     {"name": "century_number$ebnf$1", "symbols": [/[0-9]/], "postprocess": id},
     {"name": "century_number$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "century_number$ebnf$2", "symbols": ["ordinal_suffix"], "postprocess": id},
@@ -253,8 +269,7 @@ var grammar = {
     {"name": "century_number", "symbols": [/[0-9]/, "century_number$ebnf$1", "century_number$ebnf$2"], "postprocess": (d) => Number([d[0],d[1]].join(""))},
     {"name": "decade_number$string$1", "symbols": [{"literal":"0"}, {"literal":"s"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "decade_number", "symbols": ["int", "decade_number$string$1"], "postprocess": (d) => (d[0].v + "0")},
-    {"name": "four_digit_year", "symbols": ["four_int"], "postprocess": (d) => Number(d[0])},
-    {"name": "year_number", "symbols": ["int"], "postprocess": (d) => Number(d[0].v)},
+    {"name": "four_digit_year", "symbols": ["four_int"], "postprocess": id},
     {"name": "month_name", "symbols": ["month_names"]},
     {"name": "month_name$subexpression$1$ebnf$1", "symbols": [{"literal":"."}], "postprocess": id},
     {"name": "month_name$subexpression$1$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
@@ -283,7 +298,36 @@ var grammar = {
     {"name": "ordinal_suffix$string$4", "symbols": [{"literal":"r"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "ordinal_suffix", "symbols": ["ordinal_suffix$string$4"], "postprocess": (d) => null},
     {"name": "era", "symbols": ["_", "era_names"], "postprocess": d => d[1]},
-    {"name": "four_int", "symbols": [/[0-9]/, /[0-9]/, /[0-9]/, /[0-9]/], "postprocess": (d) => d.join("")},
+    {"name": "year_era$subexpression$1$ebnf$1", "symbols": ["era"], "postprocess": id},
+    {"name": "year_era$subexpression$1$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "year_era$subexpression$1", "symbols": ["year_number", "year_era$subexpression$1$ebnf$1"]},
+    {"name": "year_era", "symbols": ["year_era$subexpression$1"]},
+    {"name": "year_era$subexpression$2", "symbols": ["low_year_number", "era"]},
+    {"name": "year_era", "symbols": ["year_era$subexpression$2"], "postprocess": (d) => {console.log(d); return d; }},
+    {"name": "low_year_number$subexpression$1", "symbols": ["two_int"]},
+    {"name": "low_year_number$subexpression$1", "symbols": ["one_int"]},
+    {"name": "low_year_number", "symbols": ["low_year_number$subexpression$1"], "postprocess": (d) => Number(d[0][0])},
+    {"name": "year_number$subexpression$1", "symbols": ["four_int"]},
+    {"name": "year_number$subexpression$1", "symbols": ["three_int"]},
+    {"name": "year_number$subexpression$1", "symbols": ["high_two_int"]},
+    {"name": "year_number", "symbols": ["year_number$subexpression$1"], "postprocess": (d) => Number(d[0][0])},
+    {"name": "four_int", "symbols": [/[0-9]/, /[0-9]/, /[0-9]/, /[0-9]/], "postprocess": (d) => Number(d.join(""))},
+    {"name": "three_int", "symbols": [/[0-9]/, /[0-9]/, /[0-9]/], "postprocess": (d) => Number(d.join(""))},
+    {"name": "high_two_int$subexpression$1$subexpression$1", "symbols": [{"literal":"3"}, /[2-9]/]},
+    {"name": "high_two_int$subexpression$1", "symbols": ["high_two_int$subexpression$1$subexpression$1"]},
+    {"name": "high_two_int$subexpression$1$subexpression$2", "symbols": [/[4-9]/, /[0-9]/]},
+    {"name": "high_two_int$subexpression$1", "symbols": ["high_two_int$subexpression$1$subexpression$2"]},
+    {"name": "high_two_int", "symbols": ["high_two_int$subexpression$1"], "postprocess": (d) =>  Number(d[0][0].join(""))},
+    {"name": "low_two_int$subexpression$1$subexpression$1", "symbols": [/[0-2]/, /[0-9]/]},
+    {"name": "low_two_int$subexpression$1", "symbols": ["low_two_int$subexpression$1$subexpression$1"]},
+    {"name": "low_two_int$subexpression$1$subexpression$2$string$1", "symbols": [{"literal":"3"}, {"literal":"0"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "low_two_int$subexpression$1$subexpression$2", "symbols": ["low_two_int$subexpression$1$subexpression$2$string$1"]},
+    {"name": "low_two_int$subexpression$1$subexpression$2$string$2", "symbols": [{"literal":"3"}, {"literal":"1"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "low_two_int$subexpression$1$subexpression$2", "symbols": ["low_two_int$subexpression$1$subexpression$2$string$2"]},
+    {"name": "low_two_int$subexpression$1", "symbols": ["low_two_int$subexpression$1$subexpression$2"]},
+    {"name": "low_two_int", "symbols": ["low_two_int$subexpression$1"], "postprocess": (d) =>  Number(d[0][0].join(""))},
+    {"name": "two_int", "symbols": [/[0-9]/, /[0-9]/], "postprocess": (d) => d.join("")},
+    {"name": "one_int", "symbols": [/[0-9]/]},
     {"name": "the$subexpression$1$string$1", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "the$subexpression$1", "symbols": ["the$subexpression$1$string$1"]},
     {"name": "the$subexpression$1$string$2", "symbols": [{"literal":"T"}, {"literal":"h"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
