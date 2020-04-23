@@ -298,7 +298,7 @@ describe("CulturalDates.js", () => {
       };
       expect(cd.parse(data)).toContain("the 20th century");
     });
-    it("handles uncertain centuries", () => {
+    it.skip("handles uncertain centuries", () => {
       const data = {
         botb: "19?",
         eotb: "19?",

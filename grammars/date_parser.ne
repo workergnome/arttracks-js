@@ -220,7 +220,7 @@ precise_date   ->  day              {% id %}
 # ------------------   
 century   -> the:? century_number __ century_word  era:? certainty:?           {% constructCentury %}
 decade    -> the:? decade_number era:? certainty:?                             {% constructDecade %}
-year      -> year_number era:? certainty:?                                     {% constructYear %}
+year      -> year_era certainty:?                                     {% constructYear %}
 month     -> month_name comma:? __ year_era certainty:?                        {% constructMonth %}
 day       -> month_name __ day_with_ordinal comma:? __ year_number era:? certainty:? {% constructDay %}
 euroday   -> day_with_ordinal __ month_name __ year_number era:? certainty:?         {% constructEuroDate %}
@@ -242,7 +242,7 @@ ordinal_suffix   -> "th" | "st" | "nd" | "rd"          {% (d) => null %}
 era              -> _ era_names                        {% d => d[1] %}
 
 
-year_era        -> (year_number era:?) | (low_year_number era)  {% (d) => {console.log(d); return d; }%}
+year_era        -> (year_number era:?) | (low_year_number era)  {% id %}
 low_year_number  -> (two_int | one_int) {% (d) => Number(d[0][0]) %}
 year_number      -> (four_int | three_int | high_two_int) {% (d) => Number(d[0][0]) %}
 four_int      -> [0-9] [0-9] [0-9] [0-9]        {% (d) => Number(d.join("")) %}

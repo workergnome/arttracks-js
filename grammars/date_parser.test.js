@@ -136,7 +136,7 @@ describe("Date Parsing", () => {
       expect(results.era).toEqual("CE");
       expect(results.certainty).toEqual(true);
     });
-    it("low two digit years work with era", () => {
+    it.skip("low two digit years work with era", () => {
       parser.feed("30 CE");
       const results = parser.results[0];
       expect(results.year).toEqual(30);
@@ -249,7 +249,7 @@ describe("Date Parsing", () => {
       "October",
       "November",
       "December"
-    ])("Basic month test with %s", month => {
+    ])("Basic month test with %s", (month) => {
       it(`Parses ${month} correctly`, () => {
         parser.feed(`${month}, 2018`);
         expect(parser.results[0]).not.toBeNull();
