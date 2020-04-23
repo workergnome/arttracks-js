@@ -6,7 +6,6 @@
   "author": "David Newbury",
   "license": "MIT",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "test": "jest",
     "watch": "jest --watch --coverage --notify",
