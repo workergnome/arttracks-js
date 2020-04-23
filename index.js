@@ -59,7 +59,7 @@ import DateHelpers from "./DateHelpers.js";
  * @return {Object}
  */
 
-function parse_date(string, opts = {}) {
+export function parse_date(string, opts = {}) {
   const parser = new nearley.Parser(
     nearley.Grammar.fromCompiled(date_string_grammar)
   );
@@ -94,5 +94,3 @@ function parse_date(string, opts = {}) {
   }
   return results;
 }
-
-export { parse_date };
